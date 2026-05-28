@@ -1,0 +1,1424 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>超傾聴ワーク</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif; background:#0a0a0a; color:#e8e8e8; min-height:100vh; }
+header { background:#111; border-bottom:1px solid #1e1e1e; position:sticky; top:0; z-index:100; display:flex; align-items:center; gap:12px; padding:0 16px; height:56px; }
+.logo-mark { width:36px; height:36px; background:#E8553E; color:#fff; font-weight:900; font-size:17px; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.logo-title { font-size:15px; font-weight:800; }
+.logo-sub { font-size:8px; color:#444; letter-spacing:0.15em; }
+#open-btn { margin-left:auto; background:#E8553E; border:none; border-radius:8px; padding:6px 14px; font-size:12px; font-weight:700; cursor:pointer; color:#fff; white-space:nowrap; }
+main { max-width:860px; margin:0 auto; padding:20px 16px 80px; }
+
+/* フレーズカード */
+#phrase-card { background:#111; border:1px solid #2a2a2a; border-radius:14px; padding:20px; margin-bottom:14px; }
+#phrase-meta { display:flex; align-items:center; gap:10px; margin-bottom:12px; flex-wrap:wrap; }
+#level-tag { font-size:10px; font-weight:800; padding:3px 10px; border-radius:20px; letter-spacing:0.05em; }
+#lesson-info { font-size:11px; color:#555; }
+#sentence-counter { font-size:12px; color:#888; margin-left:auto; }
+
+/* 全文表示エリア */
+#full-text-area { background:#0d0d0d; border:1px solid #1e1e1e; border-radius:10px; padding:14px; margin-bottom:14px; display:none; }
+#full-text-area .full-text-label { font-size:10px; font-weight:700; color:#555; letter-spacing:0.1em; margin-bottom:10px; }
+#full-text-sentences { }
+.full-text-sent { font-size:13px; color:#666; line-height:1.8; padding:4px 0; cursor:pointer; border-radius:4px; padding-left:6px; transition:all 0.15s; }
+.full-text-sent.current { color:#f0f0f0; font-weight:700; border-left:3px solid #E8553E; padding-left:8px; }
+.full-text-sent.done { color:#4CAF82; }
+
+#phrase-text { font-size:clamp(15px,2.5vw,21px); font-weight:700; line-height:1.8; color:#f0f0f0; margin-bottom:16px; transition:filter 0.4s ease; }
+
+/* 再生コントロール */
+.tts-row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.rate-row { display:flex; gap:4px; }
+.rate-btn { border:none; border-radius:6px; padding:6px 11px; font-size:12px; cursor:pointer; color:#fff; background:#1e1e1e; font-family:inherit; font-weight:400; }
+.rate-btn.active { font-weight:800; }
+.voice-row { display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
+.voice-btn { border:none; border-radius:8px; padding:6px 12px; font-size:12px; cursor:pointer; color:#fff; background:#1e1e1e; font-family:inherit; font-weight:400; transition:all 0.15s; white-space:nowrap; }
+.voice-btn.active { font-weight:800; }
+#voice-status { font-size:11px; color:#555; margin-top:4px; }
+#play-btn { border:none; border-radius:8px; padding:10px 20px; font-size:14px; font-weight:700; cursor:pointer; color:#fff; font-family:inherit; }
+#play-full-btn { border:none; border-radius:8px; padding:10px 16px; font-size:13px; font-weight:700; cursor:pointer; color:#fff; font-family:inherit; background:#555; }
+#stop-btn { background:#1e1e1e; border:1px solid #2a2a2a; border-radius:8px; padding:10px 14px; font-size:14px; cursor:pointer; color:#666; font-family:inherit; }
+#tts-status { font-size:12px; color:#4CAF82; margin-top:8px; min-height:18px; }
+
+/* ナビ */
+#top-bar { display:flex; align-items:center; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
+#back-btn { background:none; border:1px solid #2a2a2a; border-radius:8px; padding:6px 14px; font-size:12px; cursor:pointer; color:#666; font-family:inherit; white-space:nowrap; }
+.sent-nav { display:flex; align-items:center; gap:6px; }
+.nav-btn { background:#1a1a1a; border:1px solid #2a2a2a; border-radius:6px; width:30px; height:30px; cursor:pointer; color:#888; font-size:18px; display:flex; align-items:center; justify-content:center; font-family:inherit; }
+.nav-btn:disabled { opacity:0.3; cursor:default; }
+#sent-count { font-size:12px; color:#555; min-width:50px; text-align:center; }
+.prog-wrap { display:flex; align-items:center; gap:8px; flex:1; min-width:80px; }
+.prog-bar { flex:1; height:5px; background:#1e1e1e; border-radius:3px; overflow:hidden; }
+.prog-fill { height:100%; border-radius:3px; transition:width 0.4s; }
+.prog-txt { font-size:11px; font-weight:700; color:#444; min-width:28px; }
+
+/* ステップ */
+#step-tabs { display:flex; gap:3px; margin-bottom:0; flex-wrap:wrap; }
+.step-tab { border:none; border-radius:8px 8px 0 0; padding:8px 13px; font-size:12px; cursor:pointer; font-family:inherit; background:#111; color:#444; border-bottom:2px solid transparent; transition:all 0.15s; }
+#step-card { background:#111; border:1px solid #1e1e1e; border-radius:0 14px 14px 14px; padding:20px; margin-bottom:16px; border-top:3px solid #E8553E; }
+.step-head { display:flex; align-items:flex-start; gap:12px; margin-bottom:14px; }
+.step-badge { font-size:9px; font-weight:800; color:#fff; padding:4px 10px; border-radius:20px; letter-spacing:0.12em; white-space:nowrap; margin-top:3px; }
+.step-title { font-size:17px; font-weight:800; line-height:1.3; }
+.step-sub { font-size:12px; color:#666; margin-top:2px; }
+.hints { margin-bottom:16px; }
+.hint-row { display:flex; align-items:flex-start; gap:8px; padding:5px 0; border-bottom:1px solid #161616; }
+.hint-dot { width:5px; height:5px; border-radius:50%; flex-shrink:0; margin-top:7px; }
+.hint-txt { font-size:13px; color:#bbb; line-height:1.6; }
+
+.field-label { font-size:11px; font-weight:700; color:#555; letter-spacing:0.08em; margin-bottom:8px; }
+textarea { width:100%; padding:11px 13px; background:#0d0d0d; border:1px solid #2a2a2a; border-radius:10px; font-size:14px; line-height:1.8; color:#e8e8e8; font-family:inherit; resize:vertical; outline:none; min-height:100px; }
+.info-box { border:1px solid; border-radius:10px; padding:10px 14px; font-size:13px; font-weight:600; margin-top:10px; }
+.sound-box { background:#0d0d0d; border:1px solid #1e1e1e; border-radius:10px; padding:14px; margin-bottom:12px; }
+.sound-note { font-size:14px; color:#ccc; line-height:1.8; }
+.rate-guide-row { display:flex; align-items:center; gap:10px; padding:5px 0; border-bottom:1px solid #161616; font-size:13px; color:#888; }
+.rate-tag { font-size:10px; font-weight:800; color:#fff; padding:2px 8px; border-radius:5px; white-space:nowrap; }
+.toggle-btn { border:none; border-radius:10px; padding:10px 18px; font-size:13px; font-weight:700; cursor:pointer; color:#fff; font-family:inherit; margin-bottom:12px; }
+.script-box { background:#0d0d0d; border:1px solid #2a2a2a; border-radius:12px; padding:16px; margin-bottom:12px; }
+.script-txt { font-size:15px; line-height:2; color:#ddd; }
+.rules-box { background:#0d0d0d; border:1px solid #1e1e1e; border-radius:12px; padding:14px; font-size:13px; }
+.rule-row { color:#888; padding:5px 0; border-bottom:1px solid #161616; line-height:1.6; }
+.slash-rules { font-size:12px; color:#777; background:#0d0d0d; border:1px solid #1e1e1e; border-radius:10px; padding:10px 14px; margin-bottom:12px; line-height:1.8; }
+.slash-chunk { background:#0d0d0d; border-left:4px solid #333; border-radius:0 10px 10px 0; padding:11px 14px; margin-bottom:6px; transition:all 0.2s; }
+.slash-chunk.active { opacity:1; }
+.slash-chunk.done { opacity:0.45; }
+.slash-en { font-size:16px; font-weight:700; color:#f0f0f0; }
+.slash-ja { font-size:12px; color:#4CAF82; margin-top:4px; }
+.slash-play-btn { border:none; border-radius:6px; padding:5px 12px; font-size:12px; cursor:pointer; color:#fff; white-space:nowrap; font-family:inherit; }
+.speed-guide { background:#0d0d0d; border:1px solid #1e1e1e; border-radius:12px; padding:14px; margin-bottom:12px; }
+.speed-row { display:flex; align-items:center; gap:10px; padding:6px 0; border-bottom:1px solid #161616; }
+.speed-row-txt { font-size:13px; color:#888; }
+#done-btn { width:100%; border:none; border-radius:12px; padding:14px; font-size:14px; font-weight:800; cursor:pointer; color:#fff; font-family:inherit; margin-top:14px; letter-spacing:0.04em; }
+
+/* 全文仕上げ */
+#full-review { background:#111; border:1px solid #2a2a2a; border-radius:18px; padding:28px 24px; margin-bottom:16px; display:none; }
+.full-review-title { font-size:18px; font-weight:900; margin-bottom:16px; }
+.full-review-sent { font-size:14px; line-height:2; color:#ccc; padding:8px 12px; border-left:3px solid #2a2a2a; margin-bottom:8px; border-radius:0 8px 8px 0; cursor:pointer; transition:all 0.15s; }
+.full-review-sent:hover { border-left-color:#888; color:#f0f0f0; }
+
+#all-done { background:#111; border:1px solid #2a2a2a; border-radius:18px; padding:36px 24px; text-align:center; margin-top:4px; display:none; }
+.all-done-title { font-size:20px; font-weight:900; margin-bottom:8px; }
+.all-done-p { font-size:13px; color:#666; line-height:1.9; margin:0 0 18px; }
+#next-sent-btn { border:none; border-radius:10px; padding:12px 24px; font-size:14px; font-weight:800; cursor:pointer; color:#fff; font-family:inherit; }
+
+/* ホーム */
+.hero { padding:36px 0 28px; }
+.hero-tag { display:inline-block; background:#E8553E; color:#fff; font-size:11px; font-weight:700; padding:4px 12px; border-radius:20px; letter-spacing:0.1em; margin-bottom:14px; }
+.hero-h1 { font-size:clamp(24px,5vw,44px); font-weight:900; line-height:1.25; letter-spacing:-0.02em; margin:0 0 12px; }
+.hero-accent { color:#E8553E; }
+.hero-p { font-size:14px; color:#666; line-height:1.9; margin:0 0 14px; }
+.hero-goal { font-size:13px; color:#4CAF82; background:rgba(76,175,130,0.07); border:1px solid rgba(76,175,130,0.2); border-radius:10px; padding:10px 16px; display:inline-block; }
+.level-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:12px; margin:28px 0 36px; }
+.level-card { background:#111; border:1px solid #222; border-radius:14px; padding:18px; text-align:left; cursor:pointer; transition:border-color 0.2s; width:100%; font-family:inherit; }
+.lv-tag { font-size:10px; font-weight:800; padding:3px 10px; border-radius:20px; display:inline-block; margin-bottom:8px; letter-spacing:0.05em; }
+.lv-uni { font-size:17px; font-weight:900; margin-bottom:3px; color:#e8e8e8; }
+.lv-label { font-size:11px; color:#555; margin-bottom:8px; }
+.lv-desc { font-size:12px; color:#777; line-height:1.7; margin-bottom:8px; }
+.lv-target { font-size:11px; font-weight:700; margin-bottom:8px; }
+.lv-cta { font-size:12px; font-weight:700; }
+.lesson-select-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:10px; margin-top:20px; }
+.lesson-card { background:#111; border:1px solid #2a2a2a; border-radius:12px; padding:16px; text-align:left; cursor:pointer; font-family:inherit; }
+.lesson-card:hover { border-color:#555; }
+.lesson-num { font-size:10px; font-weight:800; color:#555; letter-spacing:0.1em; margin-bottom:6px; }
+.lesson-topic { font-size:14px; font-weight:700; color:#e8e8e8; margin-bottom:6px; }
+.lesson-preview { font-size:11px; color:#666; line-height:1.6; }
+#work-view { display:none; }
+#lesson-select-view { display:none; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-mark">超</div>
+  <div>
+    <div class="logo-title">超傾聴ワーク</div>
+    <div class="logo-sub">RIGHT-BRAIN LISTENING</div>
+  </div>
+  <button id="open-btn" onclick="window.open(location.href,'_blank')">🔗 別タブで開く</button>
+</header>
+
+<main>
+<!-- ホーム -->
+<div id="home-view">
+  <div class="hero">
+    <div class="hero-tag">西沢ロイ先生メソッド × 右脳リスニング</div>
+    <h1 class="hero-h1">左脳を黙らせろ。<br><span class="hero-accent">音だけを信じろ。</span></h1>
+    <p class="hero-p">知識・意味・推測に頼る「左脳リスニング」から卒業。<br>1文ずつ5ステップで右脳が英語を処理できる耳をつくる。</p>
+    <div class="hero-goal">🎯 目標：共通テストリスニング80%以上 · 全員偏差値60超え</div>
+  </div>
+  <div class="level-grid" id="level-grid"></div>
+</div>
+
+<!-- レッスン選択 -->
+<div id="lesson-select-view">
+  <div id="top-bar" style="margin-bottom:20px">
+    <button id="back-btn" onclick="showHome()">← レベル選択</button>
+    <div style="font-size:16px;font-weight:800" id="lesson-select-title"></div>
+  </div>
+  <div class="lesson-select-grid" id="lesson-select-grid"></div>
+</div>
+
+<!-- ワーク -->
+<div id="work-view">
+  <div id="top-bar">
+    <button id="back-btn2" onclick="showLessonSelect()">← レッスン選択</button>
+    <div class="sent-nav">
+      <button class="nav-btn" id="prev-btn" onclick="goPrev()">‹</button>
+      <span id="sent-count">文1 / 10</span>
+      <button class="nav-btn" id="next-btn" onclick="goNext()">›</button>
+    </div>
+    <div class="prog-wrap">
+      <div class="prog-bar"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+      <span class="prog-txt" id="prog-txt">0%</span>
+    </div>
+  </div>
+
+  <div id="phrase-card">
+    <div id="phrase-meta">
+      <span id="level-tag"></span>
+      <span id="lesson-info"></span>
+      <span id="sentence-counter"></span>
+    </div>
+    <div id="phrase-text"></div>
+    <div class="voice-row" id="voice-row">
+      <span style="font-size:11px;color:#555;white-space:nowrap">🎙 音声：</span>
+    </div>
+    <div id="voice-status"></div>
+    <div class="tts-row">
+      <div class="rate-row">
+        <button class="rate-btn" data-rate="0.5"  onclick="setRate(0.5)">0.5x</button>
+        <button class="rate-btn" data-rate="0.75" onclick="setRate(0.75)">0.75x</button>
+        <button class="rate-btn active" data-rate="1.0" onclick="setRate(1.0)">1.0x</button>
+        <button class="rate-btn" data-rate="1.25" onclick="setRate(1.25)">1.25x</button>
+      </div>
+      <button id="play-btn" onclick="playPhrase()">▶ この文を再生</button>
+      <button id="stop-btn" onclick="stopPhrase()">■ 停止</button>
+    </div>
+    <div id="tts-status"></div>
+  </div>
+
+  <div id="step-tabs"></div>
+  <div id="step-card">
+    <div class="step-head">
+      <div class="step-badge" id="step-badge">STEP 1</div>
+      <div>
+        <div class="step-title" id="step-title"></div>
+        <div class="step-sub" id="step-sub"></div>
+      </div>
+    </div>
+    <div class="hints" id="hints"></div>
+    <div id="step-content"></div>
+    <button id="done-btn" onclick="completeStep()">STEP 1 完了 →</button>
+  </div>
+
+  <!-- 全文表示（一番下） -->
+  <div id="full-text-area" style="display:none;margin-bottom:16px">
+    <div class="full-text-label">📰 ニュース全文（クリックでその文に移動）</div>
+    <div id="full-text-sentences"></div>
+  </div>
+
+  <!-- 全文仕上げ（全文完了後） -->
+  <div id="full-review">
+    <div class="full-review-title" id="full-review-title">🎉 全文完了！通しで聴こう</div>
+    <div id="full-review-list"></div>
+    <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
+      <button id="play-full-btn" onclick="playFullText()"
+        style="border:none;border-radius:10px;padding:12px 20px;font-size:14px;font-weight:800;cursor:pointer;color:#fff;font-family:inherit">
+        ▶ 全文通しで再生
+      </button>
+      <button onclick="stopPhrase()"
+        style="background:#1e1e1e;border:1px solid #2a2a2a;border-radius:10px;padding:12px 16px;font-size:13px;cursor:pointer;color:#666;font-family:inherit">
+        ■ 停止
+      </button>
+    </div>
+  </div>
+
+  <div id="all-done">
+    <div style="font-size:48px;margin-bottom:10px">🎉</div>
+    <div class="all-done-title" id="all-done-title">この文 完了！</div>
+    <p class="all-done-p">5ステップ完了。次の文へ進もう！</p>
+    <button id="next-sent-btn" onclick="goNext()">次の文へ →</button>
+  </div>
+</div>
+</main>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// データ定義
+// ═══════════════════════════════════════════════════════════
+const LEVELS = [
+  { id:"A", name:"LEVEL A", uni:"摂神追桃", tag:"共通テスト基礎", color:"#4CAF82",
+    desc:"日常・基礎表現。1文ずつニュースを処理する。", target:"共通テスト 50〜60点台 / 偏差値45〜50" },
+  { id:"B", name:"LEVEL B", uni:"産近甲龍", tag:"共通テスト標準", color:"#4A90D9",
+    desc:"社会・環境・科学ニュース。語順感覚を養う。", target:"共通テスト 70点台 / 偏差値50〜55" },
+  { id:"C", name:"LEVEL C", uni:"関関同立", tag:"共通テスト満点", color:"#E8553E",
+    desc:"本格ニュース英語。右脳リスニング完成形。", target:"共通テスト 80点以上 / 偏差値55〜60" },
+  { id:"D", name:"LEVEL D", uni:"早慶・難関国立", tag:"早慶＆ネイティブ", color:"#9B59B6",
+    desc:"ナチュラルスピードのニュース。左脳を完全に切る。", target:"難関大学合格 / 偏差値65以上" },
+];
+
+// ─── レッスンデータ ───────────────────────────────────────
+// 構造: { id, topic, sentences: [ { en, slashChunks, soundNote } ] }
+const LESSONS = {
+  A: [
+    {
+      id:"A-L01", topic:"学校生活・友人関係",
+      sentences: [
+        { en:"Yuki is a high school student in Osaka.",
+          slashChunks:[{en:"Yuki is",ja:"ユキは〜だ"},{en:"a high school student",ja:"高校生"},{en:"in Osaka.",ja:"大阪の"}],
+          soundNote:"high school → 「ハイスクー」のようにlが落ちる。" },
+        { en:"She wakes up at six every morning.",
+          slashChunks:[{en:"She wakes up",ja:"彼女は起きる"},{en:"at six",ja:"6時に"},{en:"every morning.",ja:"毎朝"}],
+          soundNote:"wakes up → 「ウェイクサップ」のように連結。at sixのtが弱い。" },
+        { en:"She usually walks to school with her best friend, Hana.",
+          slashChunks:[{en:"She usually walks",ja:"彼女はいつも歩いて行く"},{en:"to school",ja:"学校へ"},{en:"with her best friend, Hana.",ja:"親友のハナと一緒に"}],
+          soundNote:"usually → 「ユージュリ」のようにalが弱化。with her → 「ウィザ」のようにhが落ちる。" },
+        { en:"It takes them about twenty minutes to get there.",
+          slashChunks:[{en:"It takes them",ja:"彼女たちにはかかる"},{en:"about twenty minutes",ja:"約20分"},{en:"to get there.",ja:"そこに着くまでに"}],
+          soundNote:"takes them → 「テイクスゼム」のように連結。twenty → 「トゥエニ」のようにtが濁る。" },
+        { en:"On the way, they often talk about their classes and teachers.",
+          slashChunks:[{en:"On the way,",ja:"途中で"},{en:"they often talk",ja:"彼女たちはよく話す"},{en:"about their classes and teachers.",ja:"授業や先生について"}],
+          soundNote:"on the way → 「オンダウェイ」のように連結。often → 「オーフン」のようにtが落ちる。" },
+        { en:"Hana is very good at English and wants to study abroad someday.",
+          slashChunks:[{en:"Hana is very good at English",ja:"ハナは英語がとても得意で"},{en:"and wants to study abroad",ja:"留学したいと思っている"},{en:"someday.",ja:"いつか"}],
+          soundNote:"good at → 「グダッ」のようにdとatが連結。wants to → 「ウォンツタ」。" },
+        { en:"Yuki, on the other hand, is more interested in music.",
+          slashChunks:[{en:"Yuki,",ja:"ユキは"},{en:"on the other hand,",ja:"一方で"},{en:"is more interested in music.",ja:"音楽の方に興味がある"}],
+          soundNote:"on the other hand → 「オンジアザハンド」のように全体が連結してリズムよく流れる。" },
+        { en:"She plays the guitar and hopes to join a band one day.",
+          slashChunks:[{en:"She plays the guitar",ja:"彼女はギターを弾いていて"},{en:"and hopes to join a band",ja:"バンドに入りたいと思っている"},{en:"one day.",ja:"いつか"}],
+          soundNote:"plays the → 「プレイズダ」。hopes to → 「ホウプスタ」のようにtが弱化。" },
+        { en:"Despite their different interests, the two girls are very close.",
+          slashChunks:[{en:"Despite their different interests,",ja:"異なる興味を持ちながらも"},{en:"the two girls",ja:"その2人の女の子は"},{en:"are very close.",ja:"とても仲が良い"}],
+          soundNote:"despite their → 「ディスパイトゼア」のようにtheir のhが落ちる。" },
+        { en:"They support each other and enjoy every day of school life together.",
+          slashChunks:[{en:"They support each other",ja:"彼女たちはお互いを支え合い"},{en:"and enjoy",ja:"そして楽しんでいる"},{en:"every day of school life together.",ja:"学校生活の毎日を一緒に"}],
+          soundNote:"each other → 「イーチアザ」のように連結。every day → 「エヴリデイ」のようにdが濁る。" },
+      ]
+    },
+    {
+      id:"A-L02", topic:"地域・環境・ボランティア",
+      sentences: [
+        { en:"A local park in Kyoto has become very popular with young people.",
+          slashChunks:[{en:"A local park",ja:"地元の公園が"},{en:"in Kyoto",ja:"京都の"},{en:"has become very popular",ja:"とても人気になっている"},{en:"with young people.",ja:"若者の間で"}],
+          soundNote:"local park → 「ロウコゥパーク」のようにlとpが連結。has become → 「ァズビカム」。" },
+        { en:"Every weekend, volunteers come to clean up the area.",
+          slashChunks:[{en:"Every weekend,",ja:"毎週末"},{en:"volunteers come",ja:"ボランティアが来て"},{en:"to clean up the area.",ja:"その地域を掃除する"}],
+          soundNote:"every weekend → 「エヴリウィークエンド」。clean up → 「クリーナップ」のように連結。" },
+        { en:"Last month, more than fifty people joined the cleanup event.",
+          slashChunks:[{en:"Last month,",ja:"先月"},{en:"more than fifty people",ja:"50人以上が"},{en:"joined the cleanup event.",ja:"清掃イベントに参加した"}],
+          soundNote:"more than → 「モーザン」のようにtが弱化。joined the → 「ジョインドダ」。" },
+        { en:"The organizer, Ms. Tanaka, said she was surprised by the large turnout.",
+          slashChunks:[{en:"The organizer, Ms. Tanaka,",ja:"主催者の田中さんは"},{en:"said she was surprised",ja:"驚いたと言った"},{en:"by the large turnout.",ja:"多くの参加者に"}],
+          soundNote:"said she → 「セッドシ」のようにd sheが連結。surprised by → 「サプライズドバイ」。" },
+        { en:"She started the event three years ago with just five friends.",
+          slashChunks:[{en:"She started the event",ja:"彼女はそのイベントを始めた"},{en:"three years ago",ja:"3年前に"},{en:"with just five friends.",ja:"たった5人の友人と"}],
+          soundNote:"started the → 「スターリダ」のようにtedとtheが連結。years ago → 「イヤズアゴウ」。" },
+        { en:"Now it has grown into one of the biggest community activities in the city.",
+          slashChunks:[{en:"Now it has grown",ja:"今ではそれは成長した"},{en:"into one of the biggest",ja:"最大規模の1つへ"},{en:"community activities in the city.",ja:"市内のコミュニティ活動の"}],
+          soundNote:"has grown → 「ァズグロウン」のようにhが落ちる。one of the → 「ワネヴダ」。" },
+        { en:"Many participants say they feel proud to take care of their neighborhood.",
+          slashChunks:[{en:"Many participants say",ja:"多くの参加者は言う"},{en:"they feel proud",ja:"誇りに思うと"},{en:"to take care of their neighborhood.",ja:"自分たちの地域を大切にすることを"}],
+          soundNote:"take care of → 「テイッケアロヴ」のように全体が連結。feel proud → 「フィールプラウド」。" },
+        { en:"The park now has new benches and flower beds thanks to their hard work.",
+          slashChunks:[{en:"The park now has",ja:"その公園には今"},{en:"new benches and flower beds",ja:"新しいベンチと花壇がある"},{en:"thanks to their hard work.",ja:"彼らの努力のおかげで"}],
+          soundNote:"thanks to → 「サンクスタ」のようにtが弱化。hard work → 「ハードワーク」Rに注意。" },
+        { en:"Children from a nearby school also helped plant flowers last spring.",
+          slashChunks:[{en:"Children from a nearby school",ja:"近くの学校の子どもたちも"},{en:"also helped plant flowers",ja:"花を植えるのを手伝った"},{en:"last spring.",ja:"昨年の春に"}],
+          soundNote:"helped plant → 「ヘルプトプラント」のようにdとpが連結。nearby → 「ニアバイ」Rに注意。" },
+        { en:"Ms. Tanaka hopes the event will continue for many years to come.",
+          slashChunks:[{en:"Ms. Tanaka hopes",ja:"田中さんは望んでいる"},{en:"the event will continue",ja:"そのイベントが続くことを"},{en:"for many years to come.",ja:"これからも長年にわたって"}],
+          soundNote:"will continue → 「ウィルコンティニュ」のようにwillが弱形。years to come → 「イヤーズタカム」。" },
+      ]
+    },
+    {
+      id:"A-L03", topic:"健康・食生活",
+      sentences: [
+        { en:"A new study shows that many Japanese teenagers do not eat breakfast.",
+          slashChunks:[{en:"A new study shows",ja:"新しい研究が示している"},{en:"that many Japanese teenagers",ja:"多くの日本の10代が"},{en:"do not eat breakfast.",ja:"朝食を食べないことを"}],
+          soundNote:"study shows → 「スタディショウズ」のようにyとshが連結。do not → 「ドゥナット」。" },
+        { en:"Researchers say skipping breakfast can affect concentration at school.",
+          slashChunks:[{en:"Researchers say",ja:"研究者たちは言う"},{en:"skipping breakfast",ja:"朝食を抜くことが"},{en:"can affect concentration at school.",ja:"学校での集中力に影響しうると"}],
+          soundNote:"skipping breakfast → 「スキッピンブレックファスト」のようにgとbが連結。can affect → 「キャナフェクト」。" },
+        { en:"The study looked at over two thousand students across Japan.",
+          slashChunks:[{en:"The study looked at",ja:"その研究は調べた"},{en:"over two thousand students",ja:"2000人以上の生徒を"},{en:"across Japan.",ja:"日本全国の"}],
+          soundNote:"looked at → 「ルックダッ」のようにdとatが連結。over two → 「オウヴァトゥー」。" },
+        { en:"About thirty percent said they often feel tired in the morning.",
+          slashChunks:[{en:"About thirty percent said",ja:"約30%が言った"},{en:"they often feel tired",ja:"午前中によく疲れを感じると"},{en:"in the morning.",ja:"午前中に"}],
+          soundNote:"thirty percent → 「サーリパーセント」のようにtが濁る。often feel → 「オーフンフィール」。" },
+        { en:"Doctors recommend eating a balanced meal within an hour of waking up.",
+          slashChunks:[{en:"Doctors recommend",ja:"医師たちは勧めている"},{en:"eating a balanced meal",ja:"バランスの取れた食事をとることを"},{en:"within an hour of waking up.",ja:"起床後1時間以内に"}],
+          soundNote:"recommend eating → 「レコメンディーリン」のようにdとeが連結。waking up → 「ウェイキナップ」。" },
+        { en:"Rice, eggs, and miso soup are considered a good traditional Japanese breakfast.",
+          slashChunks:[{en:"Rice, eggs, and miso soup",ja:"ご飯・卵・味噌汁は"},{en:"are considered",ja:"考えられている"},{en:"a good traditional Japanese breakfast.",ja:"良い伝統的な日本の朝食として"}],
+          soundNote:"considered a → 「コンスィダードア」のようにd aが連結。traditional → 「トラディショノゥ」のようにlが弱化。" },
+        { en:"However, many students say they simply do not have enough time in the morning.",
+          slashChunks:[{en:"However,",ja:"しかし"},{en:"many students say",ja:"多くの生徒は言う"},{en:"they simply do not have enough time",ja:"単純に時間が十分にないと"},{en:"in the morning.",ja:"午前中に"}],
+          soundNote:"simply do not → 「スィンプリドゥナット」のように全体が流れる。enough time → 「イナフタイム」。" },
+        { en:"Schools are now looking at ways to help students develop healthier habits.",
+          slashChunks:[{en:"Schools are now looking at ways",ja:"学校は今、方法を探している"},{en:"to help students",ja:"生徒を助ける"},{en:"develop healthier habits.",ja:"より健康的な習慣を身につけるための"}],
+          soundNote:"looking at → 「ルッキンナッ」のようにgとatが連結。develop healthier → 「ディヴェロップヘルシア」。" },
+        { en:"Some schools have started offering breakfast programs before class.",
+          slashChunks:[{en:"Some schools have started",ja:"一部の学校は始めた"},{en:"offering breakfast programs",ja:"朝食プログラムを提供することを"},{en:"before class.",ja:"授業前に"}],
+          soundNote:"have started → 「ァヴスターリッ」のようにhが落ちtが濁る。before class → 「ビフォークラス」。" },
+        { en:"Experts hope these efforts will lead to better health outcomes for young people.",
+          slashChunks:[{en:"Experts hope",ja:"専門家たちは望んでいる"},{en:"these efforts will lead",ja:"これらの取り組みが繋がることを"},{en:"to better health outcomes",ja:"より良い健康結果に"},{en:"for young people.",ja:"若者にとっての"}],
+          soundNote:"these efforts → 「ジーズエフォーツ」のようにse eが連結。will lead to → 「ウィルリードタ」。" },
+      ]
+    },
+    {
+      id:"A-L04", topic:"テクノロジー・SNS",
+      sentences: [
+        { en:"More and more young people in Japan are using social media every day.",
+          slashChunks:[{en:"More and more young people",ja:"ますます多くの若者が"},{en:"in Japan",ja:"日本の"},{en:"are using social media every day.",ja:"毎日ソーシャルメディアを使っている"}],
+          soundNote:"more and more → 「モーランモー」のようにandが弱化。social media → 「ソウシャルミーディア」。" },
+        { en:"A recent survey found that teenagers spend an average of four hours online daily.",
+          slashChunks:[{en:"A recent survey found",ja:"最近の調査でわかった"},{en:"that teenagers spend",ja:"10代が過ごしていることが"},{en:"an average of four hours online daily.",ja:"平均で毎日4時間をオンラインで"}],
+          soundNote:"recent survey → 「リーセントサーヴェイ」のようにtとsが連結。found that → 「ファウンダット」。" },
+        { en:"Many use it to stay connected with friends and share photos.",
+          slashChunks:[{en:"Many use it",ja:"多くはそれを使う"},{en:"to stay connected with friends",ja:"友人とつながり続けるために"},{en:"and share photos.",ja:"そして写真を共有するために"}],
+          soundNote:"stay connected → 「ステイコネクリッ」のようにtが濁る。share photos → 「シェアフォウトウズ」。" },
+        { en:"However, experts warn that too much screen time can cause sleep problems.",
+          slashChunks:[{en:"However,",ja:"しかし"},{en:"experts warn",ja:"専門家たちは警告している"},{en:"that too much screen time",ja:"スクリーンタイムが多すぎると"},{en:"can cause sleep problems.",ja:"睡眠の問題を引き起こしうると"}],
+          soundNote:"warn that → 「ウォーンザット」のようにnとtが連結。screen time → 「スクリーンタイム」。" },
+        { en:"Blue light from smartphones can make it harder to fall asleep at night.",
+          slashChunks:[{en:"Blue light from smartphones",ja:"スマートフォンのブルーライトが"},{en:"can make it harder",ja:"より難しくなりうる"},{en:"to fall asleep at night.",ja:"夜眠りにつくことを"}],
+          soundNote:"make it harder → 「メイキッハーダ」のようにt itが連結。fall asleep → 「フォーラスリープ」。" },
+        { en:"Some parents have set rules about phone use after nine o'clock at night.",
+          slashChunks:[{en:"Some parents have set rules",ja:"一部の保護者はルールを設けている"},{en:"about phone use",ja:"スマホの使用について"},{en:"after nine o'clock at night.",ja:"夜9時以降の"}],
+          soundNote:"have set → 「ァヴセット」のようにhが落ちる。after nine → 「アフタナイン」のようにrが弱い。" },
+        { en:"Schools are also starting to discuss policies on smartphone use during class.",
+          slashChunks:[{en:"Schools are also starting",ja:"学校も始めている"},{en:"to discuss policies",ja:"方針を議論することを"},{en:"on smartphone use during class.",ja:"授業中のスマートフォン使用に関する"}],
+          soundNote:"starting to → 「スターリンタ」のようにtが濁る。during class → 「デュアリンクラス」。" },
+        { en:"One teacher said that students who check their phones often lose focus quickly.",
+          slashChunks:[{en:"One teacher said",ja:"ある先生は言った"},{en:"that students who check their phones often",ja:"よくスマホをチェックする生徒は"},{en:"lose focus quickly.",ja:"すぐに集中力を失うと"}],
+          soundNote:"check their → 「チェックゼア」のようにtheirのhが落ちる。lose focus → 「ルーズフォウカス」。" },
+        { en:"On the other hand, some apps help students study more effectively.",
+          slashChunks:[{en:"On the other hand,",ja:"一方で"},{en:"some apps help students",ja:"一部のアプリは生徒が〜するのを助ける"},{en:"study more effectively.",ja:"より効果的に勉強するのを"}],
+          soundNote:"on the other hand → 「オンジアザハンド」のように全体が連結。effectively → 「イフェクリヴリ」のようにtが濁る。" },
+        { en:"Experts say balance is the key to using technology in a healthy way.",
+          slashChunks:[{en:"Experts say",ja:"専門家たちは言う"},{en:"balance is the key",ja:"バランスが鍵だと"},{en:"to using technology",ja:"テクノロジーを使う上での"},{en:"in a healthy way.",ja:"健全な方法で"}],
+          soundNote:"balance is → 「バランスィズ」のようにe iが連結。healthy way → 「ヘルシウェイ」のようにthが「ス」に近い音。" },
+      ]
+    },
+  ],
+
+  B: [
+    {
+      id:"B-L01", topic:"環境・気候変動",
+      sentences: [
+        { en:"Scientists around the world are warning that climate change is accelerating faster than expected.",
+          slashChunks:[{en:"Scientists around the world",ja:"世界中の科学者たちが"},{en:"are warning",ja:"警告している"},{en:"that climate change is accelerating",ja:"気候変動が加速していると"},{en:"faster than expected.",ja:"予想より速く"}],
+          soundNote:"around the world→「アラウンダワールド」。accelerating→「アクセラレイリン」のようにtが濁る。" },
+        { en:"Global temperatures have risen by more than one degree Celsius over the past century.",
+          slashChunks:[{en:"Global temperatures have risen",ja:"世界の気温は上昇した"},{en:"by more than one degree Celsius",ja:"1度以上"},{en:"over the past century.",ja:"過去100年で"}],
+          soundNote:"have risen→「ァヴリズン」のようにhが落ちる。past century→「パストセンチュリ」のようにtとcが連結。" },
+        { en:"This has led to more frequent and severe weather events such as floods and droughts.",
+          slashChunks:[{en:"This has led to",ja:"これは繋がっている"},{en:"more frequent and severe weather events",ja:"より頻繁で深刻な気象現象に"},{en:"such as floods and droughts.",ja:"洪水や干ばつなどの"}],
+          soundNote:"led to→「レッタ」。such as→「サッチャズ」のように連結。" },
+        { en:"Many coastal cities are at risk of flooding due to rising sea levels.",
+          slashChunks:[{en:"Many coastal cities",ja:"多くの沿岸都市が"},{en:"are at risk of flooding",ja:"洪水のリスクにさらされている"},{en:"due to rising sea levels.",ja:"海面上昇のために"}],
+          soundNote:"at risk of→「アッリスコヴ」のように全体が連結。sea levels→「シーレヴォズ」のようにlが弱化。" },
+        { en:"Governments worldwide are under pressure to reduce carbon dioxide emissions.",
+          slashChunks:[{en:"Governments worldwide",ja:"世界中の政府が"},{en:"are under pressure",ja:"圧力にさらされている"},{en:"to reduce carbon dioxide emissions.",ja:"二酸化炭素の排出量を削減するよう"}],
+          soundNote:"under pressure→「アンダプレシャ」。carbon dioxide→「カーボンダイオクサイド」。" },
+        { en:"Renewable energy sources like solar and wind power are growing rapidly.",
+          slashChunks:[{en:"Renewable energy sources",ja:"再生可能エネルギー源が"},{en:"like solar and wind power",ja:"太陽光や風力などの"},{en:"are growing rapidly.",ja:"急速に成長している"}],
+          soundNote:"like solar→「ライクソウラ」のように連結。growing rapidly→「グロウィンラピッリ」のようにdが濁る。" },
+        { en:"However, the transition away from fossil fuels is proving to be difficult.",
+          slashChunks:[{en:"However,",ja:"しかし"},{en:"the transition away from fossil fuels",ja:"化石燃料からの移行は"},{en:"is proving to be difficult.",ja:"困難であることがわかってきている"}],
+          soundNote:"transition away→「トランズィションアウェイ」のようにnとaが連結。proving to be→「プルーヴィンタビ」。" },
+        { en:"Individuals can also help by reducing waste and choosing sustainable products.",
+          slashChunks:[{en:"Individuals can also help",ja:"個人も助けることができる"},{en:"by reducing waste",ja:"廃棄物を減らすことで"},{en:"and choosing sustainable products.",ja:"そして持続可能な製品を選ぶことで"}],
+          soundNote:"can also→「キャノールソウ」のようにnとaが連結。sustainable→「サステイナボウ」のようにlが弱化。" },
+        { en:"Small changes in daily habits can make a big difference when done by millions of people.",
+          slashChunks:[{en:"Small changes in daily habits",ja:"日常習慣の小さな変化が"},{en:"can make a big difference",ja:"大きな違いをもたらしうる"},{en:"when done by millions of people.",ja:"何百万人もの人々によって行われると"}],
+          soundNote:"make a big→「メイカビッ」のようにa bigが連結。millions of→「ミリョンゾヴ」のように連結。" },
+        { en:"The future of the planet depends on the decisions we make today.",
+          slashChunks:[{en:"The future of the planet",ja:"地球の未来は"},{en:"depends on the decisions",ja:"かかっている・決断に"},{en:"we make today.",ja:"私たちが今日下す"}],
+          soundNote:"depends on→「ディペンゾン」のようにdsとonが連結。decisions we→「ディスィジョンズウィ」。" },
+      ]
+    },
+    {
+      id:"B-L02", topic:"グローバル化・多文化社会",
+      sentences: [
+        { en:"Globalization has transformed the way people live, work, and communicate around the world.",
+          slashChunks:[{en:"Globalization has transformed",ja:"グローバル化は変えてきた"},{en:"the way people live, work, and communicate",ja:"人々の生き方・働き方・コミュニケーションの方法を"},{en:"around the world.",ja:"世界中で"}],
+          soundNote:"has transformed→「ァストランスフォームド」のようにhが落ちる。communicate around→「コミュニケイタラウンド」。" },
+        { en:"More people than ever are crossing borders for work, study, and new opportunities.",
+          slashChunks:[{en:"More people than ever",ja:"かつてないほど多くの人々が"},{en:"are crossing borders",ja:"国境を越えている"},{en:"for work, study, and new opportunities.",ja:"仕事・学習・新たな機会のために"}],
+          soundNote:"than ever→「ザンネヴァ」のようにnとeが連結。crossing borders→「クロッシンボーダーズ」。" },
+        { en:"This movement of people has created diverse and multicultural societies in many countries.",
+          slashChunks:[{en:"This movement of people",ja:"この人の移動が"},{en:"has created diverse and multicultural societies",ja:"多様で多文化的な社会を生み出してきた"},{en:"in many countries.",ja:"多くの国に"}],
+          soundNote:"movement of→「ムーヴメントォヴ」。multicultural societies→「マルティカルチャロゥササイアティーズ」。" },
+        { en:"Cultural exchange can lead to greater understanding and cooperation between nations.",
+          slashChunks:[{en:"Cultural exchange",ja:"文化的交流は"},{en:"can lead to greater understanding",ja:"より深い理解に繋がりうる"},{en:"and cooperation between nations.",ja:"そして国家間の協力に"}],
+          soundNote:"can lead to→「キャンリードタ」のようにnとlが連結。cooperation between→「コウオペレイションビトウィーン」。" },
+        { en:"However, rapid globalization has also brought challenges such as cultural homogenization.",
+          slashChunks:[{en:"However,",ja:"しかし"},{en:"rapid globalization has also brought challenges",ja:"急速なグローバル化は課題ももたらしてきた"},{en:"such as cultural homogenization.",ja:"文化的均質化などの"}],
+          soundNote:"has also brought→「ァズオールソウブロート」のようにhが落ちる。homogenization→「ホモジェナイゼイション」。" },
+        { en:"Some people worry that local traditions and languages are being lost as global culture spreads.",
+          slashChunks:[{en:"Some people worry",ja:"一部の人々は心配している"},{en:"that local traditions and languages",ja:"地域の伝統や言語が"},{en:"are being lost",ja:"失われつつあると"},{en:"as global culture spreads.",ja:"グローバルな文化が広がるにつれて"}],
+          soundNote:"worry that→「ウォーリザット」のようにyとtが連結。are being lost→「アービーインロスト」。" },
+        { en:"On the other hand, global trade has lifted millions of people out of poverty.",
+          slashChunks:[{en:"On the other hand,",ja:"一方で"},{en:"global trade has lifted",ja:"グローバルな貿易は引き上げてきた"},{en:"millions of people",ja:"何百万人もの人々を"},{en:"out of poverty.",ja:"貧困から"}],
+          soundNote:"on the other hand→「オンジアザハンド」のように全体が連結。lifted millions→「リフティッミリョンズ」。" },
+        { en:"Access to technology and the internet has connected communities that were once isolated.",
+          slashChunks:[{en:"Access to technology and the internet",ja:"テクノロジーとインターネットへのアクセスが"},{en:"has connected communities",ja:"コミュニティをつないできた"},{en:"that were once isolated.",ja:"かつては孤立していた"}],
+          soundNote:"access to→「アクセスタ」のようにsとtが連結。were once→「ウォーワンス」のようにrとoが連結。" },
+        { en:"Finding the right balance between global integration and local identity is an ongoing challenge.",
+          slashChunks:[{en:"Finding the right balance",ja:"適切なバランスを見つけることが"},{en:"between global integration and local identity",ja:"グローバルな統合と地域のアイデンティティの間の"},{en:"is an ongoing challenge.",ja:"継続的な課題だ"}],
+          soundNote:"right balance→「ライトバランス」のようにtとbが連結。ongoing challenge→「オンゴウィンチャレンジ」。" },
+        { en:"Ultimately, embracing diversity while respecting cultural roots may be the key to a peaceful world.",
+          slashChunks:[{en:"Ultimately,",ja:"最終的に"},{en:"embracing diversity while respecting cultural roots",ja:"文化的ルーツを尊重しながら多様性を受け入れることが"},{en:"may be the key",ja:"鍵かもしれない"},{en:"to a peaceful world.",ja:"平和な世界への"}],
+          soundNote:"embracing diversity→「エンブレイスィンダイヴァーシリ」のようにtが濁る。while respecting→「ワイルリスペクリン」。" },
+      ]
+    },
+    {
+      id:"B-L03", topic:"科学・宇宙探査",
+      sentences: [
+        { en:"Space exploration has entered a new era with both governments and private companies involved.",
+          slashChunks:[{en:"Space exploration has entered a new era",ja:"宇宙探査は新たな時代に入った"},{en:"with both governments and private companies",ja:"政府と民間企業の両方が"},{en:"involved.",ja:"関わっている"}],
+          soundNote:"has entered→「ァズエンタード」のようにhが落ちる。private companies→「プライヴィッカンパニーズ」のようにtが濁る。" },
+        { en:"NASA and SpaceX have both announced plans to send humans to Mars within the next decade.",
+          slashChunks:[{en:"NASA and SpaceX have both announced",ja:"NASAとSpaceXはともに発表した"},{en:"plans to send humans to Mars",ja:"人間を火星に送る計画を"},{en:"within the next decade.",ja:"次の10年以内に"}],
+          soundNote:"have both announced→「ァヴボウスアナウンスト」のようにhが落ちる。within the→「ウィジンダ」。" },
+        { en:"Getting to Mars would take around seven months with current technology.",
+          slashChunks:[{en:"Getting to Mars",ja:"火星に到着するには"},{en:"would take around seven months",ja:"約7ヶ月かかるだろう"},{en:"with current technology.",ja:"現在の技術では"}],
+          soundNote:"getting to→「ゲリンタ」のようにtが濁りtoと連結。around seven→「アラウンドセヴン」。" },
+        { en:"Scientists are working on developing faster propulsion systems to reduce travel time.",
+          slashChunks:[{en:"Scientists are working on",ja:"科学者たちは取り組んでいる"},{en:"developing faster propulsion systems",ja:"より速い推進システムを開発することに"},{en:"to reduce travel time.",ja:"移動時間を短縮するための"}],
+          soundNote:"working on→「ワーキンオン」のようにgとoが連結。propulsion systems→「プロパルションスィステムズ」。" },
+        { en:"One of the biggest challenges is protecting astronauts from harmful radiation in space.",
+          slashChunks:[{en:"One of the biggest challenges",ja:"最大の課題の1つは"},{en:"is protecting astronauts",ja:"宇宙飛行士を守ることだ"},{en:"from harmful radiation in space.",ja:"宇宙の有害な放射線から"}],
+          soundNote:"one of the→「ワネヴダ」のように全体が連結。protecting astronauts→「プロテクリンアストロノーツ」のようにtが濁る。" },
+        { en:"Water and food supplies are also major concerns for long-duration missions.",
+          slashChunks:[{en:"Water and food supplies",ja:"水と食料の供給も"},{en:"are also major concerns",ja:"大きな懸念事項だ"},{en:"for long-duration missions.",ja:"長期ミッションにとって"}],
+          soundNote:"water and→「ウォーラン」のようにrとandが連結。long-duration→「ロンデュレイション」。" },
+        { en:"Despite the risks, many scientists believe that exploring space is essential for humanity's future.",
+          slashChunks:[{en:"Despite the risks,",ja:"リスクにもかかわらず"},{en:"many scientists believe",ja:"多くの科学者たちは信じている"},{en:"that exploring space is essential",ja:"宇宙を探査することは不可欠だと"},{en:"for humanity's future.",ja:"人類の未来にとって"}],
+          soundNote:"despite the→「ディスパイッダ」のようにtとtheが連結。humanity's future→「ヒューマニリーズフューチャ」。" },
+        { en:"New discoveries about Mars suggest that liquid water may have once existed on its surface.",
+          slashChunks:[{en:"New discoveries about Mars",ja:"火星についての新たな発見は示唆している"},{en:"suggest that liquid water",ja:"液体の水が"},{en:"may have once existed on its surface.",ja:"かつてその表面に存在していたかもしれないと"}],
+          soundNote:"discoveries about→「ディスカヴァリーザバウト」のようにsとaが連結。existed on→「イグズィスティドン」。" },
+        { en:"If life ever existed on Mars, it could change our understanding of biology and evolution.",
+          slashChunks:[{en:"If life ever existed on Mars,",ja:"もし生命がかつて火星に存在していたなら"},{en:"it could change our understanding",ja:"それは私たちの理解を変えるかもしれない"},{en:"of biology and evolution.",ja:"生物学と進化についての"}],
+          soundNote:"ever existed→「エヴァリグズィスティッ」のようにrとeが連結。biology and→「バイオロジャン」のようにyとaが連結。" },
+        { en:"The exploration of space reminds us that human curiosity and ambition have no limits.",
+          slashChunks:[{en:"The exploration of space",ja:"宇宙の探査は"},{en:"reminds us",ja:"思い出させてくれる"},{en:"that human curiosity and ambition",ja:"人間の好奇心と野望には"},{en:"have no limits.",ja:"限界がないことを"}],
+          soundNote:"reminds us→「リマインズァス」のようにdsとusが連結。curiosity and→「キュアリオスィリャン」のようにtが濁る。" },
+      ]
+    },
+    {
+      id:"B-L04", topic:"医療・健康科学",
+      sentences: [
+        { en:"Modern medicine has made remarkable progress in treating diseases that were once considered incurable.",
+          slashChunks:[{en:"Modern medicine has made remarkable progress",ja:"現代医学は目覚ましい進歩を遂げてきた"},{en:"in treating diseases",ja:"病気を治療することにおいて"},{en:"that were once considered incurable.",ja:"かつて不治と考えられていた"}],
+          soundNote:"has made remarkable→「ァズメイドリマーカボゥ」のようにhが落ちlが弱化。incurable→「インキュアラボゥ」のようにlが弱化。" },
+        { en:"Vaccines have saved millions of lives by preventing the spread of infectious diseases.",
+          slashChunks:[{en:"Vaccines have saved millions of lives",ja:"ワクチンは何百万もの命を救ってきた"},{en:"by preventing the spread",ja:"拡大を防ぐことで"},{en:"of infectious diseases.",ja:"感染症の"}],
+          soundNote:"have saved→「ァヴセイヴド」のようにhが落ちる。preventing the→「プリヴェンリンダ」のようにtが濁る。" },
+        { en:"Researchers are now using artificial intelligence to develop new drugs more quickly.",
+          slashChunks:[{en:"Researchers are now using",ja:"研究者たちは今や使っている"},{en:"artificial intelligence",ja:"人工知能を"},{en:"to develop new drugs more quickly.",ja:"より速く新薬を開発するために"}],
+          soundNote:"now using→「ナウユーズィン」のようにwとuが連結。develop new→「ディヴェロップニュー」のようにpとnが連結。" },
+        { en:"Mental health is increasingly recognized as just as important as physical health.",
+          slashChunks:[{en:"Mental health",ja:"精神的健康は"},{en:"is increasingly recognized",ja:"ますます認識されてきている"},{en:"as just as important",ja:"同じくらい重要だと"},{en:"as physical health.",ja:"身体的健康と"}],
+          soundNote:"increasingly recognized→「インクリースィングリリカグナイズド」。as just as→「アズジャスタズ」のように連結。" },
+        { en:"Depression and anxiety affect hundreds of millions of people worldwide each year.",
+          slashChunks:[{en:"Depression and anxiety",ja:"うつ病と不安症は"},{en:"affect hundreds of millions of people",ja:"何億人もの人々に影響を与えている"},{en:"worldwide each year.",ja:"世界中で毎年"}],
+          soundNote:"depression and→「ディプレッションャン」のようにnとaが連結。hundreds of→「ハンドレッゾヴ」のように連結。" },
+        { en:"Access to affordable healthcare remains a major challenge in many parts of the world.",
+          slashChunks:[{en:"Access to affordable healthcare",ja:"手頃な医療へのアクセスが"},{en:"remains a major challenge",ja:"依然として大きな課題だ"},{en:"in many parts of the world.",ja:"世界の多くの地域で"}],
+          soundNote:"affordable healthcare→「アフォーダボゥヘルスケア」のようにlが弱化。many parts of→「メニパーツォヴ」。" },
+        { en:"Preventive care, such as regular checkups and exercise, can reduce the burden on health systems.",
+          slashChunks:[{en:"Preventive care,",ja:"予防医療は"},{en:"such as regular checkups and exercise,",ja:"定期健診や運動などの"},{en:"can reduce the burden",ja:"負担を軽減できる"},{en:"on health systems.",ja:"医療システムへの"}],
+          soundNote:"preventive care→「プリヴェンリヴケア」のようにtが濁る。checkups and→「チェカプサン」のようにsとaが連結。" },
+        { en:"Genetic research is opening new possibilities for personalized medicine tailored to each patient.",
+          slashChunks:[{en:"Genetic research",ja:"遺伝子研究が"},{en:"is opening new possibilities",ja:"新たな可能性を開いている"},{en:"for personalized medicine",ja:"個別化医療のための"},{en:"tailored to each patient.",ja:"各患者に合わせた"}],
+          soundNote:"is opening→「イゾウプニン」のようにsとoが連結。tailored to→「テイラードタ」のようにdとtが連結。" },
+        { en:"The aging population in many developed countries is putting pressure on medical resources.",
+          slashChunks:[{en:"The aging population",ja:"高齢化する人口が"},{en:"in many developed countries",ja:"多くの先進国の"},{en:"is putting pressure",ja:"圧力をかけている"},{en:"on medical resources.",ja:"医療資源に"}],
+          soundNote:"aging population→「エイジンポピュレイション」のようにgとpが連結。putting pressure→「プリンプレシャ」のようにtが濁る。" },
+        { en:"Investing in public health today is one of the most effective ways to build a stronger society.",
+          slashChunks:[{en:"Investing in public health today",ja:"今日の公衆衛生への投資が"},{en:"is one of the most effective ways",ja:"最も効果的な方法の1つだ"},{en:"to build a stronger society.",ja:"より強い社会を築くための"}],
+          soundNote:"investing in→「インヴェスリンイン」のようにtが濁る。one of the most→「ワネヴダモウスト」のように連結。" },
+      ]
+    },
+  ],
+  C: [
+    {
+      id:"C-L01", topic:"人工知能と社会",
+      sentences: [
+        { en:"Artificial intelligence is rapidly transforming the way people work and live.",
+          slashChunks:[{en:"Artificial intelligence",ja:"人工知能が"},{en:"is rapidly transforming",ja:"急速に変えている"},{en:"the way people work and live.",ja:"人々の働き方・生き方を"}],
+          soundNote:"artificial intelligence→「アーティフィシャリンテリジェンス」のようにtificial inが連結。rapidly→Rに注意。" },
+        { en:"From healthcare to education, AI is being used in almost every field.",
+          slashChunks:[{en:"From healthcare to education,",ja:"医療から教育まで"},{en:"AI is being used",ja:"AIが使われている"},{en:"in almost every field.",ja:"ほぼあらゆる分野で"}],
+          soundNote:"from healthcare→「フロムヘルケア」のようにmとhが連結。almost every→「オールモウステヴリ」。" },
+        { en:"Supporters argue that AI can solve complex problems that humans struggle with.",
+          slashChunks:[{en:"Supporters argue",ja:"支持者たちは主張する"},{en:"that AI can solve complex problems",ja:"AIは複雑な問題を解決できると"},{en:"that humans struggle with.",ja:"人間が苦労している"}],
+          soundNote:"argue that→「アーギュザット」のようにeとtが連結。struggle with→「ストラッゴウィズ」のようにlが弱化。" },
+        { en:"For example, AI systems can analyze medical images more accurately than doctors.",
+          slashChunks:[{en:"For example,",ja:"例えば"},{en:"AI systems can analyze",ja:"AIシステムは分析できる"},{en:"medical images",ja:"医療画像を"},{en:"more accurately than doctors.",ja:"医師よりも正確に"}],
+          soundNote:"for example→「フォリグザンポゥ」のようにrとeが連結。accurately→「アキュリトリ」のようにtが濁る。" },
+        { en:"However, many people are worried about job losses caused by automation.",
+          slashChunks:[{en:"However,",ja:"しかし"},{en:"many people are worried",ja:"多くの人々は心配している"},{en:"about job losses",ja:"雇用の喪失について"},{en:"caused by automation.",ja:"自動化によって引き起こされる"}],
+          soundNote:"worried about→「ウォーリダバウト」のようにdとaが連結。caused by→「コーズドバイ」。" },
+        { en:"Studies suggest that millions of jobs could be replaced by machines in the coming decades.",
+          slashChunks:[{en:"Studies suggest",ja:"研究は示唆している"},{en:"that millions of jobs",ja:"何百万もの仕事が"},{en:"could be replaced by machines",ja:"機械に置き換えられるかもしれないと"},{en:"in the coming decades.",ja:"これからの数十年で"}],
+          soundNote:"suggest that→「サジェストザット」。could be replaced→「クッビリプレイスト」のようにd beが連結。" },
+        { en:"Experts say new jobs will also be created, but the transition may be painful.",
+          slashChunks:[{en:"Experts say",ja:"専門家たちは言う"},{en:"new jobs will also be created,",ja:"新たな仕事も生まれるだろうと"},{en:"but the transition may be painful.",ja:"しかしその移行は苦しいかもしれない"}],
+          soundNote:"will also→「ウィローソウ」のようにllとaが連結。transition may→「トランズィションメイ」。" },
+        { en:"Governments are being urged to invest in education and retraining programs.",
+          slashChunks:[{en:"Governments are being urged",ja:"政府は求められている"},{en:"to invest in education",ja:"教育に投資するよう"},{en:"and retraining programs.",ja:"そして再訓練プログラムに"}],
+          soundNote:"being urged→「ビーインアージド」のようにgとuが連結。retraining→「リートレイニン」Rに注意。" },
+        { en:"The ethical use of AI is also a growing concern among researchers and policymakers.",
+          slashChunks:[{en:"The ethical use of AI",ja:"AIの倫理的な使用も"},{en:"is also a growing concern",ja:"高まる懸念となっている"},{en:"among researchers and policymakers.",ja:"研究者や政策立案者の間で"}],
+          soundNote:"ethical use→「エシコゥユーズ」のようにlとuが連結。policymakers→「ポリスィメイカーズ」のようにcyとmが連結。" },
+        { en:"How society chooses to develop and regulate AI will shape the world for generations to come.",
+          slashChunks:[{en:"How society chooses",ja:"社会がどのように選択するかが"},{en:"to develop and regulate AI",ja:"AIを発展させ規制することを"},{en:"will shape the world",ja:"世界を形作るだろう"},{en:"for generations to come.",ja:"これからの世代のために"}],
+          soundNote:"chooses to→「チューズィズタ」のようにse tが連結。generations to come→「ジェネレイションズタカム」。" },
+      ]
+    },
+    {
+      id:"C-L02", topic:"経済格差・社会正義",
+      sentences: [
+        { en:"Economic inequality has become one of the defining issues of the twenty-first century.",
+          slashChunks:[{en:"Economic inequality",ja:"経済的不平等が"},{en:"has become one of the defining issues",ja:"最も重要な問題の1つになってきた"},{en:"of the twenty-first century.",ja:"21世紀の"}],
+          soundNote:"has become→「ァズビカム」のようにhが落ちる。defining issues→「ディファイニンイシューズ」のようにgとiが連結。" },
+        { en:"The gap between the wealthiest and the poorest members of society continues to widen.",
+          slashChunks:[{en:"The gap between the wealthiest and the poorest",ja:"最も裕福な人と最も貧しい人の間の格差が"},{en:"members of society",ja:"社会の構成員の"},{en:"continues to widen.",ja:"広がり続けている"}],
+          soundNote:"wealthiest and→「ウェルシィエスタン」のようにtとaが連結。continues to→「コンティニューズタ」。" },
+        { en:"In many countries, the top one percent of earners hold more wealth than the bottom fifty percent combined.",
+          slashChunks:[{en:"In many countries,",ja:"多くの国では"},{en:"the top one percent of earners",ja:"収入上位1%の人々が"},{en:"hold more wealth",ja:"より多くの富を保有している"},{en:"than the bottom fifty percent combined.",ja:"下位50%の合計より"}],
+          soundNote:"one percent of→「ワンパーセントォヴ」のように連結。fifty percent combined→「フィフリパーセントコンバインド」のようにtが濁る。" },
+        { en:"Access to quality education is often seen as the key to breaking the cycle of poverty.",
+          slashChunks:[{en:"Access to quality education",ja:"質の高い教育へのアクセスが"},{en:"is often seen as the key",ja:"しばしば鍵と見なされている"},{en:"to breaking the cycle of poverty.",ja:"貧困のサイクルを断ち切るための"}],
+          soundNote:"is often seen→「イゾーフンスィーン」のようにsとoが連結。breaking the→「ブレイキンダ」。" },
+        { en:"However, children from low-income families often attend underfunded schools.",
+          slashChunks:[{en:"However,",ja:"しかし"},{en:"children from low-income families",ja:"低所得家庭の子どもたちは"},{en:"often attend underfunded schools.",ja:"しばしば資金不足の学校に通っている"}],
+          soundNote:"low-income families→「ロウインカムファミリーズ」のようにwとiが連結。underfunded→「アンダファンディッ」のようにdが濁る。" },
+        { en:"This creates a cycle where poverty is passed from one generation to the next.",
+          slashChunks:[{en:"This creates a cycle",ja:"これはサイクルを作り出す"},{en:"where poverty is passed",ja:"貧困が受け継がれる"},{en:"from one generation to the next.",ja:"1世代から次の世代へ"}],
+          soundNote:"creates a→「クリエイツア」のようにsとaが連結。passed from→「パストフロム」のようにdとfが連結。" },
+        { en:"Progressive taxation and social welfare programs are among the tools governments use to address inequality.",
+          slashChunks:[{en:"Progressive taxation and social welfare programs",ja:"累進課税と社会福祉プログラムは"},{en:"are among the tools",ja:"ツールの1つだ"},{en:"governments use to address inequality.",ja:"政府が不平等に対処するために使う"}],
+          soundNote:"progressive taxation→「プログレスィヴタクセイション」のようにveとtが連結。address inequality→「アドレスィニクウォリリ」のようにtが濁る。" },
+        { en:"Critics argue that such policies can reduce economic growth and discourage innovation.",
+          slashChunks:[{en:"Critics argue",ja:"批判者たちは主張する"},{en:"that such policies can reduce economic growth",ja:"そのような政策が経済成長を減らしうると"},{en:"and discourage innovation.",ja:"そして革新を妨げると"}],
+          soundNote:"such policies→「サッチポリスィーズ」のようにchとpが連結。discourage innovation→「ディスカリジイノヴェイション」のようにgeとiが連結。" },
+        { en:"Finding the right balance between economic freedom and social equality remains a central debate.",
+          slashChunks:[{en:"Finding the right balance",ja:"適切なバランスを見つけることが"},{en:"between economic freedom and social equality",ja:"経済的自由と社会的平等の間の"},{en:"remains a central debate.",ja:"中心的な議論であり続けている"}],
+          soundNote:"right balance→「ライトバランス」のようにtとbが連結。central debate→「セントロゥディベイト」のようにlが弱化。" },
+        { en:"Ultimately, a more equal society benefits everyone, including the wealthy, through greater stability.",
+          slashChunks:[{en:"Ultimately,",ja:"最終的には"},{en:"a more equal society benefits everyone,",ja:"より平等な社会は全員に恩恵をもたらす"},{en:"including the wealthy,",ja:"裕福な人々も含めて"},{en:"through greater stability.",ja:"より大きな安定を通じて"}],
+          soundNote:"benefits everyone→「ベネフィッツエヴリワン」のようにsとeが連結。including the→「インクルーディンダ」。" },
+      ]
+    },
+    {
+      id:"C-L03", topic:"メディアリテラシー・情報社会",
+      sentences: [
+        { en:"In the digital age, the ability to critically evaluate information has never been more important.",
+          slashChunks:[{en:"In the digital age,",ja:"デジタル時代において"},{en:"the ability to critically evaluate information",ja:"情報を批判的に評価する能力が"},{en:"has never been more important.",ja:"これほど重要だったことはない"}],
+          soundNote:"critically evaluate→「クリリコリイヴァリュエイト」のようにtが濁りlyとeが連結。has never been→「ァズネヴァビーン」のようにhが落ちる。" },
+        { en:"The internet has made it possible for anyone to publish content without editorial oversight.",
+          slashChunks:[{en:"The internet has made it possible",ja:"インターネットは可能にしてきた"},{en:"for anyone to publish content",ja:"誰でもコンテンツを公開することを"},{en:"without editorial oversight.",ja:"編集上の監視なしに"}],
+          soundNote:"has made it→「ァズメイディッ」のようにhが落ちdとitが連結。editorial oversight→「エディトリョウオウヴァーサイト」。" },
+        { en:"As a result, misinformation and fake news spread rapidly across social media platforms.",
+          slashChunks:[{en:"As a result,",ja:"その結果"},{en:"misinformation and fake news",ja:"誤情報やフェイクニュースが"},{en:"spread rapidly",ja:"急速に拡散している"},{en:"across social media platforms.",ja:"ソーシャルメディアプラットフォーム全体に"}],
+          soundNote:"as a result→「アザリザルト」のように全体が連結。spread rapidly→「スプレッドラピッリ」のようにdが濁る。" },
+        { en:"Studies show that false information often spreads faster than the truth on social networks.",
+          slashChunks:[{en:"Studies show",ja:"研究は示している"},{en:"that false information often spreads",ja:"誤情報がしばしば広まると"},{en:"faster than the truth",ja:"真実よりも速く"},{en:"on social networks.",ja:"ソーシャルネットワークで"}],
+          soundNote:"studies show→「スタディズショウ」のようにsとshが連結。faster than→「ファスタザン」のようにrとtが連結。" },
+        { en:"This is partly because emotionally charged content tends to attract more attention.",
+          slashChunks:[{en:"This is partly because",ja:"これは一因に"},{en:"emotionally charged content",ja:"感情的に刺激的なコンテンツが"},{en:"tends to attract more attention.",ja:"より多くの注目を集めやすいからだ"}],
+          soundNote:"partly because→「パートリビコーズ」のようにlyとbが連結。attract more→「アトラクトモー」のようにtとmが連結。" },
+        { en:"Media literacy programs teach people how to identify reliable sources and verify facts.",
+          slashChunks:[{en:"Media literacy programs",ja:"メディアリテラシープログラムは"},{en:"teach people how to identify reliable sources",ja:"信頼できる情報源を特定する方法を人々に教え"},{en:"and verify facts.",ja:"そして事実を確認する方法を"}],
+          soundNote:"literacy programs→「リタラスィプログラムズ」のようにcyとpが連結。verify facts→「ヴェリファイファクツ」のようにyとfが連結。" },
+        { en:"Some experts advocate for stronger regulation of social media companies to curb the spread of harmful content.",
+          slashChunks:[{en:"Some experts advocate",ja:"一部の専門家は主張している"},{en:"for stronger regulation of social media companies",ja:"ソーシャルメディア企業のより強力な規制を"},{en:"to curb the spread of harmful content.",ja:"有害なコンテンツの拡散を抑制するための"}],
+          soundNote:"advocate for→「アドヴォケイトフォ」のようにteとfが連結。curb the spread→「カーブダスプレッド」のようにbとtheが連結。" },
+        { en:"Others believe that censorship poses a greater threat to free speech than misinformation itself.",
+          slashChunks:[{en:"Others believe",ja:"他の人々は信じている"},{en:"that censorship poses a greater threat",ja:"検閲の方がより大きな脅威だと"},{en:"to free speech",ja:"言論の自由への"},{en:"than misinformation itself.",ja:"誤情報そのものより"}],
+          soundNote:"censorship poses→「センサーシッポウズィズ」のようにpとpが連結。free speech→「フリースピーチ」のようにeとsが連結。" },
+        { en:"Teaching critical thinking skills in schools is widely seen as the most sustainable solution.",
+          slashChunks:[{en:"Teaching critical thinking skills in schools",ja:"学校で批判的思考スキルを教えることが"},{en:"is widely seen",ja:"広く見なされている"},{en:"as the most sustainable solution.",ja:"最も持続可能な解決策として"}],
+          soundNote:"critical thinking→「クリリコゥシンキン」のようにtが濁る。widely seen→「ワイドリースィーン」のようにyとsが連結。" },
+        { en:"In an age of information overload, knowing what to trust may be the most valuable skill of all.",
+          slashChunks:[{en:"In an age of information overload,",ja:"情報過多の時代において"},{en:"knowing what to trust",ja:"何を信頼するかを知ることが"},{en:"may be the most valuable skill of all.",ja:"最も価値あるスキルかもしれない・すべての中で"}],
+          soundNote:"age of information→「エイジョヴインフォメイション」のようにgとoとiが連結。valuable skill→「ヴァリュアボゥスキル」のようにlが弱化。" },
+      ]
+    },
+    {
+      id:"C-L04", topic:"心理学・人間行動",
+      sentences: [
+        { en:"Psychology is the scientific study of the human mind and behavior.",
+          slashChunks:[{en:"Psychology",ja:"心理学は"},{en:"is the scientific study",ja:"科学的研究だ"},{en:"of the human mind and behavior.",ja:"人間の心と行動の"}],
+          soundNote:"psychology→「サイコロジ」のようにpは発音しない。scientific study→「サイエンティフィックスタディ」。" },
+        { en:"One of the most well-known concepts in psychology is the idea of cognitive bias.",
+          slashChunks:[{en:"One of the most well-known concepts",ja:"最もよく知られた概念の1つが"},{en:"in psychology",ja:"心理学における"},{en:"is the idea of cognitive bias.",ja:"認知バイアスという考えだ"}],
+          soundNote:"well-known concepts→「ウェルノウンコンセプツ」のようにnとcが連結。cognitive bias→「コグニリヴバイアス」のようにtが濁る。" },
+        { en:"Cognitive biases are systematic errors in thinking that affect our decisions and judgments.",
+          slashChunks:[{en:"Cognitive biases",ja:"認知バイアスは"},{en:"are systematic errors in thinking",ja:"思考における体系的なエラーだ"},{en:"that affect our decisions and judgments.",ja:"私たちの決定と判断に影響する"}],
+          soundNote:"systematic errors→「スィステマリックエラーズ」のようにtが濁る。affect our→「アフェクタワ」のようにtとourが連結。" },
+        { en:"For example, confirmation bias leads people to seek out information that supports their existing beliefs.",
+          slashChunks:[{en:"For example,",ja:"例えば"},{en:"confirmation bias leads people",ja:"確証バイアスは人々を導く"},{en:"to seek out information",ja:"情報を探すよう"},{en:"that supports their existing beliefs.",ja:"自分の既存の信念を支持する"}],
+          soundNote:"leads people to→「リーズピーポゥタ」のようにdsとpとtが連結。existing beliefs→「イグズィスリンビリーフス」のようにtが濁る。" },
+        { en:"The bystander effect describes why people are less likely to help in emergencies when others are present.",
+          slashChunks:[{en:"The bystander effect describes",ja:"傍観者効果は説明する"},{en:"why people are less likely to help",ja:"なぜ人々が助ける可能性が低くなるかを"},{en:"in emergencies",ja:"緊急時に"},{en:"when others are present.",ja:"他の人がいる場合"}],
+          soundNote:"bystander effect→「バイスタンダーイフェクト」のようにrとeが連結。emergencies when→「イマージェンスィーズウェン」。" },
+        { en:"Research in positive psychology focuses on what makes life meaningful and fulfilling.",
+          slashChunks:[{en:"Research in positive psychology",ja:"ポジティブ心理学の研究は"},{en:"focuses on what makes life",ja:"何が人生を〜にするかに焦点を当てている"},{en:"meaningful and fulfilling.",ja:"意味深く充実したものに"}],
+          soundNote:"positive psychology→「ポズィリヴサイコロジ」のようにtが濁る。meaningful and→「ミーニンフォランド」のようにlとaが連結。" },
+        { en:"Studies show that strong social connections are one of the biggest predictors of happiness.",
+          slashChunks:[{en:"Studies show",ja:"研究は示している"},{en:"that strong social connections",ja:"強い社会的つながりが"},{en:"are one of the biggest predictors of happiness.",ja:"幸福の最大の予測因子の1つだと"}],
+          soundNote:"social connections→「ソウシャルコネクションズ」のようにlとcが連結。biggest predictors→「ビゲストプリディクターズ」のようにtが濁る。" },
+        { en:"Mindfulness, the practice of paying attention to the present moment, has been shown to reduce stress.",
+          slashChunks:[{en:"Mindfulness,",ja:"マインドフルネスは"},{en:"the practice of paying attention",ja:"注意を払う実践だが"},{en:"to the present moment,",ja:"現在の瞬間に"},{en:"has been shown to reduce stress.",ja:"ストレスを軽減することが示されてきた"}],
+          soundNote:"paying attention→「ペイインアテンション」のようにgとaが連結。has been shown→「ァズビーンショウン」のようにhが落ちる。" },
+        { en:"Understanding psychology can help individuals make better decisions and build healthier relationships.",
+          slashChunks:[{en:"Understanding psychology",ja:"心理学を理解することは"},{en:"can help individuals",ja:"個人が〜するのを助けることができる"},{en:"make better decisions",ja:"より良い決断をし"},{en:"and build healthier relationships.",ja:"そしてより健全な関係を築くことを"}],
+          soundNote:"understanding psychology→「アンダスタンディンサイコロジ」のようにgとpが連結。healthier relationships→「ヘルシアリレイションシップス」。" },
+        { en:"In this sense, the insights of psychology are not just academic but deeply practical.",
+          slashChunks:[{en:"In this sense,",ja:"この意味では"},{en:"the insights of psychology",ja:"心理学の洞察は"},{en:"are not just academic",ja:"単に学術的なだけでなく"},{en:"but deeply practical.",ja:"深く実践的でもある"}],
+          soundNote:"insights of→「インサイツォヴ」のようにtsとoが連結。deeply practical→「ディープリプラクリコゥ」のようにtが濁る。" },
+      ]
+    },
+  ],
+  D: [
+    {
+      id:"D-L01", topic:"言語・認知科学・哲学",
+      sentences: [
+        { en:"The question of whether language shapes thought has fascinated philosophers and linguists for centuries.",
+          slashChunks:[{en:"The question",ja:"その問いは"},{en:"of whether language shapes thought",ja:"言語が思考を形成するかどうかという"},{en:"has fascinated philosophers and linguists",ja:"哲学者や言語学者を魅了してきた"},{en:"for centuries.",ja:"何世紀もの間"}],
+          soundNote:"whether language→「ウェザランギウィジ」のようにrとlが連結。fascinated→「ファスィネイリッ」のようにtが濁る。" },
+        { en:"One influential theory, known as the Sapir-Whorf hypothesis, suggests that the language we speak determines how we perceive reality.",
+          slashChunks:[{en:"One influential theory,",ja:"ある影響力のある理論は"},{en:"known as the Sapir-Whorf hypothesis,",ja:"サピア＝ウォーフ仮説として知られる"},{en:"suggests that the language we speak",ja:"私たちが話す言語が"},{en:"determines how we perceive reality.",ja:"現実をどう認識するかを決定すると主張する"}],
+          soundNote:"influential theory→「インフルエンシャルシアリ」のようにlとtが連結。perceive reality→「パスィーヴリアリリ」のようにtが濁る。" },
+        { en:"For instance, languages that have many words for snow may lead their speakers to notice subtle differences in snow types.",
+          slashChunks:[{en:"For instance,",ja:"例えば"},{en:"languages that have many words for snow",ja:"雪を表す単語を多く持つ言語は"},{en:"may lead their speakers",ja:"その話者を導くかもしれない"},{en:"to notice subtle differences in snow types.",ja:"雪の種類の微妙な違いに気づくよう"}],
+          soundNote:"for instance→「フォリンスタンス」のようにrとiが連結。subtle→「サトゥル」のようにbが落ちる。" },
+        { en:"Critics, however, argue that thought can exist independently of language.",
+          slashChunks:[{en:"Critics, however,",ja:"批判者たちは・しかし"},{en:"argue that thought can exist",ja:"思考は存在しうると主張する"},{en:"independently of language.",ja:"言語から独立して"}],
+          soundNote:"critics however→「クリリクスハウエヴァ」のようにcsとhが連結。independently of→「インディペンデントリオヴ」。" },
+        { en:"They point to the fact that babies reason and solve problems before they acquire language.",
+          slashChunks:[{en:"They point to the fact",ja:"彼らは事実を指摘する"},{en:"that babies reason and solve problems",ja:"赤ちゃんが推論し問題を解くという"},{en:"before they acquire language.",ja:"言語を習得する前に"}],
+          soundNote:"point to the→「ポインタダ」のようにtとtとtheが連結。acquire language→「アクワイアランギウィジ」。" },
+        { en:"Neuroscientists have also found that different parts of the brain handle language and thought separately.",
+          slashChunks:[{en:"Neuroscientists have also found",ja:"神経科学者たちも発見した"},{en:"that different parts of the brain",ja:"脳の異なる部分が"},{en:"handle language and thought separately.",ja:"言語と思考を別々に処理することを"}],
+          soundNote:"neuroscientists have→「ニューロサイエンティスツァヴ」のようにhが落ちる。separately→「セパラトリ」のようにtが濁る。" },
+        { en:"Despite this debate, most researchers agree that language profoundly influences the way we categorize and remember experiences.",
+          slashChunks:[{en:"Despite this debate,",ja:"この議論にもかかわらず"},{en:"most researchers agree",ja:"ほとんどの研究者は同意する"},{en:"that language profoundly influences",ja:"言語が深く影響を与えると"},{en:"the way we categorize and remember experiences.",ja:"経験を分類し記憶する方法に"}],
+          soundNote:"profoundly influences→「プロファウンドリインフルエンシズ」のようにlyとinが連結。categorize→「カテゴライズ」のようにtが濁る。" },
+        { en:"Learning a new language, therefore, is not merely acquiring new words, but adopting a new way of seeing the world.",
+          slashChunks:[{en:"Learning a new language,",ja:"新しい言語を学ぶことは"},{en:"therefore,",ja:"したがって"},{en:"is not merely acquiring new words,",ja:"単に新しい単語を習得することではなく"},{en:"but adopting a new way of seeing the world.",ja:"世界を見る新しい方法を採用することだ"}],
+          soundNote:"merely acquiring→「ミアリアクワイアリン」のようにlyとaが連結。adopting a→「アダプリンア」のようにtが濁る。" },
+        { en:"This insight has important implications for education, translation, and even artificial intelligence.",
+          slashChunks:[{en:"This insight has important implications",ja:"この洞察は重要な示唆を持つ"},{en:"for education, translation,",ja:"教育・翻訳"},{en:"and even artificial intelligence.",ja:"そして人工知能にとっても"}],
+          soundNote:"insight has→「インサイツァズ」のようにtとhが連結。implications for→「インプリケイションズフォ」。" },
+        { en:"Understanding how language and thought interact remains one of the most profound questions in all of human knowledge.",
+          slashChunks:[{en:"Understanding how language and thought interact",ja:"言語と思考がどのように相互作用するかを理解することは"},{en:"remains one of the most profound questions",ja:"依然として最も深遠な問いの1つだ"},{en:"in all of human knowledge.",ja:"人間の知識全体において"}],
+          soundNote:"interact remains→「インタラクトリメインズ」のようにtとrが連結。profound questions→「プロファウンドクウェスチョンズ」。" },
+      ]
+    },
+    {
+      id:"D-L02", topic:"哲学・倫理学・自由意志",
+      sentences: [
+        { en:"The question of free will has occupied philosophers since ancient times.",
+          slashChunks:[{en:"The question of free will",ja:"自由意志の問いは"},{en:"has occupied philosophers",ja:"哲学者たちを占めてきた"},{en:"since ancient times.",ja:"古代から"}],
+          soundNote:"free will→「フリーウィル」のようにeとwが連結。occupied philosophers→「オキュパイドフィロサファーズ」のようにdとpが連結。" },
+        { en:"At its core, the debate asks whether human beings are truly the authors of their own actions.",
+          slashChunks:[{en:"At its core,",ja:"その核心において"},{en:"the debate asks",ja:"議論は問いかける"},{en:"whether human beings are truly the authors",ja:"人間が本当に自分の行動の作者であるかどうかを"},{en:"of their own actions.",ja:""}],
+          soundNote:"at its core→「アリッツコー」のようにtとitsが連結。truly the authors→「トゥルーリジアウサーズ」のようにlyとtheが連結。" },
+        { en:"Determinists argue that every event, including human choice, is the inevitable result of prior causes.",
+          slashChunks:[{en:"Determinists argue",ja:"決定論者たちは主張する"},{en:"that every event, including human choice,",ja:"人間の選択を含む全ての出来事が"},{en:"is the inevitable result of prior causes.",ja:"以前の原因の不可避の結果だと"}],
+          soundNote:"including human→「インクルーディンヒューマン」のようにgとhが連結。inevitable result→「イネヴィタボゥリザルト」のようにlが弱化。" },
+        { en:"If this is true, then holding people morally responsible for their actions becomes deeply problematic.",
+          slashChunks:[{en:"If this is true,",ja:"これが事実なら"},{en:"then holding people morally responsible",ja:"人々を道徳的に責任を問うことが"},{en:"for their actions",ja:"その行動について"},{en:"becomes deeply problematic.",ja:"深く問題のあることになる"}],
+          soundNote:"holding people→「ホウルディンピーポゥ」のようにgとpが連結。morally responsible→「モーラリリスポンサボゥ」のようにlが弱化。" },
+        { en:"Compatibilists, on the other hand, believe that free will and determinism can coexist.",
+          slashChunks:[{en:"Compatibilists,",ja:"両立論者たちは"},{en:"on the other hand,",ja:"一方で"},{en:"believe that free will and determinism",ja:"自由意志と決定論は"},{en:"can coexist.",ja:"共存できると信じている"}],
+          soundNote:"compatibilists on→「コンパティビリスツォン」のようにsとoが連結。coexist→「コウイグズィスト」のようにoとeが連結。" },
+        { en:"They define free will not as freedom from causation, but as the ability to act according to one's own desires and reasoning.",
+          slashChunks:[{en:"They define free will",ja:"彼らは自由意志を定義する"},{en:"not as freedom from causation,",ja:"因果関係からの自由としてではなく"},{en:"but as the ability to act",ja:"行動する能力として"},{en:"according to one's own desires and reasoning.",ja:"自分の欲求と理性に従って"}],
+          soundNote:"freedom from→「フリーダムフロム」のようにmとfが連結。according to→「アコーディンタ」のようにgとtが連結。" },
+        { en:"Recent advances in neuroscience have added new complexity to this ancient debate.",
+          slashChunks:[{en:"Recent advances in neuroscience",ja:"神経科学の最近の進歩が"},{en:"have added new complexity",ja:"新たな複雑さを加えてきた"},{en:"to this ancient debate.",ja:"この古代の議論に"}],
+          soundNote:"advances in→「アドヴァンスィズィン」のようにsとiが連結。ancient debate→「エインシェントディベイト」のようにtとdが連結。" },
+        { en:"Brain imaging studies suggest that the neural processes behind a decision begin before we become consciously aware of making it.",
+          slashChunks:[{en:"Brain imaging studies suggest",ja:"脳画像研究は示唆している"},{en:"that the neural processes behind a decision",ja:"決定の背後にある神経プロセスが"},{en:"begin before we become consciously aware",ja:"私たちが意識的に気づく前に始まると"},{en:"of making it.",ja:"それを行うことを"}],
+          soundNote:"neural processes→「ニューロゥプロセスィズ」のようにlとpが連結。consciously aware→「コンシャスリアウェア」のようにlyとaが連結。" },
+        { en:"This raises profound questions about personal identity, moral responsibility, and the nature of the self.",
+          slashChunks:[{en:"This raises profound questions",ja:"これは深遠な問いを提起する"},{en:"about personal identity, moral responsibility,",ja:"個人のアイデンティティ・道徳的責任"},{en:"and the nature of the self.",ja:"そして自己の本質について"}],
+          soundNote:"raises profound→「レイズィズプロファウンド」のようにsとpが連結。moral responsibility→「モーロゥリスポンサビリリ」のようにlが弱化しtが濁る。" },
+        { en:"Whether or not we ever resolve the mystery of free will, grappling with it forces us to think more carefully about how we live.",
+          slashChunks:[{en:"Whether or not we ever resolve",ja:"自由意志の謎をいつか解決するかどうかに関わらず"},{en:"the mystery of free will,",ja:""},{en:"grappling with it forces us",ja:"それと取り組むことは私たちに強いる"},{en:"to think more carefully about how we live.",ja:"どう生きるかをより慎重に考えることを"}],
+          soundNote:"whether or not→「ウェザオーナット」のようにrとoが連結。grappling with→「グラップリンウィズ」のようにgとwが連結。" },
+      ]
+    },
+    {
+      id:"D-L03", topic:"グローバル政治・国際関係",
+      sentences: [
+        { en:"The international order established after World War Two is facing unprecedented challenges in the twenty-first century.",
+          slashChunks:[{en:"The international order",ja:"第二次世界大戦後に確立された国際秩序が"},{en:"established after World War Two",ja:""},{en:"is facing unprecedented challenges",ja:"前例のない課題に直面している"},{en:"in the twenty-first century.",ja:"21世紀において"}],
+          soundNote:"international order→「インタナショノゥオーダ」のようにlが弱化しlとoが連結。unprecedented→「アンプレスィデンティッ」のようにtが飲み込まれる。" },
+        { en:"The rise of populist movements in many democracies reflects a deep distrust of traditional political institutions.",
+          slashChunks:[{en:"The rise of populist movements",ja:"ポピュリスト運動の台頭は"},{en:"in many democracies",ja:"多くの民主主義国における"},{en:"reflects a deep distrust",ja:"深い不信を反映している"},{en:"of traditional political institutions.",ja:"伝統的な政治制度への"}],
+          soundNote:"populist movements→「ポピュリストムーヴメンツ」のようにtとmが連結。traditional political→「トラディショノゥポリリコゥ」のようにlが弱化しtが濁る。" },
+        { en:"Geopolitical tensions between major powers are reshaping alliances and trade relationships worldwide.",
+          slashChunks:[{en:"Geopolitical tensions between major powers",ja:"主要大国間の地政学的緊張が"},{en:"are reshaping alliances",ja:"同盟を再形成している"},{en:"and trade relationships worldwide.",ja:"そして貿易関係を・世界中で"}],
+          soundNote:"geopolitical tensions→「ジーオポリリコゥテンションズ」のようにtが濁る。reshaping alliances→「リシェイピンアライアンスィズ」のようにgとaが連結。" },
+        { en:"Climate change, pandemics, and nuclear proliferation are threats that no single nation can address alone.",
+          slashChunks:[{en:"Climate change, pandemics, and nuclear proliferation",ja:"気候変動・パンデミック・核拡散は"},{en:"are threats",ja:"脅威だ"},{en:"that no single nation can address alone.",ja:"単一の国家が単独で対処できない"}],
+          soundNote:"nuclear proliferation→「ニュークリアプロリファレイション」。single nation→「スィングゥネイション」のようにlが弱化しgとnが連結。" },
+        { en:"Multilateral institutions such as the United Nations are struggling to maintain relevance in a fragmented world.",
+          slashChunks:[{en:"Multilateral institutions",ja:"多国間機関は"},{en:"such as the United Nations",ja:"国連などの"},{en:"are struggling to maintain relevance",ja:"妥当性を維持しようと苦闘している"},{en:"in a fragmented world.",ja:"断片化した世界で"}],
+          soundNote:"multilateral institutions→「マルティラテロゥインスティチューションズ」のようにlが弱化。struggling to→「ストラッゴウリンタ」のようにlが弱化しgとtが連結。" },
+        { en:"Soft power, the ability to attract and persuade rather than coerce, has become an increasingly important tool of foreign policy.",
+          slashChunks:[{en:"Soft power,",ja:"ソフトパワーは"},{en:"the ability to attract and persuade",ja:"強制するのではなく引きつけ説得する能力だが"},{en:"rather than coerce,",ja:""},{en:"has become an increasingly important tool of foreign policy.",ja:"外交政策のますます重要なツールになってきた"}],
+          soundNote:"attract and→「アトラクタン」のようにtとaが連結。increasingly important→「インクリースィングリインポータント」のようにlyとiが連結。" },
+        { en:"The digital revolution has added a new dimension to international competition through cyber warfare and information operations.",
+          slashChunks:[{en:"The digital revolution",ja:"デジタル革命が"},{en:"has added a new dimension",ja:"新たな次元を加えてきた"},{en:"to international competition",ja:"国際競争に"},{en:"through cyber warfare and information operations.",ja:"サイバー戦争と情報作戦を通じて"}],
+          soundNote:"has added a→「ァズアデダ」のようにhが落ちdとaが連結。information operations→「インフォメイションオペレイションズ」のようにnとoが連結。" },
+        { en:"Human rights advocates argue that national sovereignty cannot be used as a shield to protect governments that abuse their citizens.",
+          slashChunks:[{en:"Human rights advocates argue",ja:"人権擁護者たちは主張する"},{en:"that national sovereignty",ja:"国家主権は"},{en:"cannot be used as a shield",ja:"盾として使われることができないと"},{en:"to protect governments that abuse their citizens.",ja:"市民を虐待する政府を守るための"}],
+          soundNote:"advocates argue→「アドヴォケイツアーギュ」のようにsとaが連結。sovereignty cannot→「サヴリンティキャナット」のようにyとcが連結。" },
+        { en:"The tension between state sovereignty and universal human rights remains one of the central dilemmas of global governance.",
+          slashChunks:[{en:"The tension between state sovereignty and universal human rights",ja:"国家主権と普遍的人権の間の緊張は"},{en:"remains one of the central dilemmas",ja:"中心的なジレンマの1つであり続けている"},{en:"of global governance.",ja:"グローバルガバナンスの"}],
+          soundNote:"sovereignty and→「サヴリンティャン」のようにyとaが連結。central dilemmas→「セントロゥダイレマズ」のようにlが弱化しtとdが連結。" },
+        { en:"Building a more just and stable world requires not only political will but a shared commitment to common values.",
+          slashChunks:[{en:"Building a more just and stable world",ja:"より公正で安定した世界を築くには"},{en:"requires not only political will",ja:"政治的意志だけでなく"},{en:"but a shared commitment",ja:"共有されたコミットメントが必要だ"},{en:"to common values.",ja:"共通の価値観への"}],
+          soundNote:"just and stable→「ジャスタンステイボゥ」のようにtとaと最後のlが弱化。shared commitment→「シェアドコミットメント」のようにdとcが連結。" },
+      ]
+    },
+    {
+      id:"D-L04", topic:"文明・歴史哲学",
+      sentences: [
+        { en:"Throughout history, the rise and fall of civilizations has followed patterns that historians continue to debate.",
+          slashChunks:[{en:"Throughout history,",ja:"歴史を通じて"},{en:"the rise and fall of civilizations",ja:"文明の興亡は"},{en:"has followed patterns",ja:"パターンに従ってきた"},{en:"that historians continue to debate.",ja:"歴史家たちが議論し続けている"}],
+          soundNote:"throughout history→「スルーアウトヒストリ」のようにtとhが連結。civilizations has→「スィヴィライゼイションズァズ」のようにhが落ちる。" },
+        { en:"Edward Gibbon's monumental work on the decline of Rome argued that moral decay was as important as military defeat.",
+          slashChunks:[{en:"Edward Gibbon's monumental work",ja:"エドワード・ギボンの記念碑的著作は"},{en:"on the decline of Rome",ja:"ローマの衰退について"},{en:"argued that moral decay",ja:"道徳的退廃が同様に重要だと主張した"},{en:"was as important as military defeat.",ja:"軍事的敗北と同じくらい"}],
+          soundNote:"monumental work→「モニュメントォウワーク」のようにlが弱化しlとwが連結。argued that→「アーギュドザット」のようにdとtが連結。" },
+        { en:"More recently, scholars like Jared Diamond have emphasized the role of geography and environment in shaping the fate of societies.",
+          slashChunks:[{en:"More recently,",ja:"より最近では"},{en:"scholars like Jared Diamond",ja:"ジャレッド・ダイアモンドのような学者たちが"},{en:"have emphasized the role of geography and environment",ja:"地理と環境の役割を強調してきた"},{en:"in shaping the fate of societies.",ja:"社会の運命を形成する上での"}],
+          soundNote:"have emphasized→「ァヴエンファサイズド」のようにhが落ちvとeが連結。geography and→「ジオグラフィャン」のようにyとaが連結。" },
+        { en:"The invention of writing, agriculture, and the wheel are often cited as turning points in human civilization.",
+          slashChunks:[{en:"The invention of writing, agriculture, and the wheel",ja:"文字・農業・車輪の発明は"},{en:"are often cited",ja:"しばしば引用される"},{en:"as turning points in human civilization.",ja:"人類文明の転換点として"}],
+          soundNote:"invention of→「インヴェンションォヴ」のようにnとoが連結。often cited→「オーフンサイリッ」のようにtが濁る。" },
+        { en:"Yet, historians warn against seeing history as a simple story of progress from primitive to advanced.",
+          slashChunks:[{en:"Yet, historians warn",ja:"しかし歴史家たちは警告する"},{en:"against seeing history",ja:"歴史を見ることに対して"},{en:"as a simple story of progress",ja:"単純な進歩の物語として"},{en:"from primitive to advanced.",ja:"原始的なものから高度なものへの"}],
+          soundNote:"historians warn→「ヒストリャンズウォーン」のようにsとwが連結。primitive to→「プリミリヴタ」のようにtが濁りvとtが連結。" },
+        { en:"Different cultures have developed simultaneously, each with their own unique achievements and limitations.",
+          slashChunks:[{en:"Different cultures have developed simultaneously,",ja:"異なる文化が同時に発展してきた"},{en:"each with their own unique achievements",ja:"それぞれが独自の業績を持ちながら"},{en:"and limitations.",ja:"そして限界も"}],
+          soundNote:"have developed→「ァヴディヴェロップト」のようにhが落ちる。simultaneously→「スィマルテイニャスリ」のようにeouslyが弱化。" },
+        { en:"The legacy of colonialism continues to shape economic and political realities in many parts of the world today.",
+          slashChunks:[{en:"The legacy of colonialism",ja:"植民地主義の遺産が"},{en:"continues to shape",ja:"引き続き形成している"},{en:"economic and political realities",ja:"経済的・政治的現実を"},{en:"in many parts of the world today.",ja:"今日の世界の多くの地域で"}],
+          soundNote:"legacy of→「レガスィォヴ」のようにyとoが連結。political realities→「ポリリコゥリアリリーズ」のようにtが濁る。" },
+        { en:"Memory, narrative, and identity are deeply intertwined, as nations construct their histories to serve present needs.",
+          slashChunks:[{en:"Memory, narrative, and identity",ja:"記憶・物語・アイデンティティは"},{en:"are deeply intertwined,",ja:"深く絡み合っている"},{en:"as nations construct their histories",ja:"国家が自国の歴史を構築するにつれて"},{en:"to serve present needs.",ja:"現在のニーズに応えるために"}],
+          soundNote:"deeply intertwined→「ディープリインタートワインド」のようにlyとiが連結。construct their→「コンストラクトゼア」のようにtとthが連結。" },
+        { en:"Understanding the past with honesty and complexity is essential if we are to avoid repeating its worst mistakes.",
+          slashChunks:[{en:"Understanding the past",ja:"過去を理解することが"},{en:"with honesty and complexity",ja:"誠実さと複雑さをもって"},{en:"is essential",ja:"不可欠だ"},{en:"if we are to avoid repeating its worst mistakes.",ja:"その最悪の過ちを繰り返すことを避けるためには"}],
+          soundNote:"honesty and→「オネスティャン」のようにyとaが連結。essential if→「イセンシャリフ」のようにlとiが連結。" },
+        { en:"History, at its best, is not merely a record of the past but a mirror in which the present sees itself more clearly.",
+          slashChunks:[{en:"History, at its best,",ja:"歴史は・最良の状態では"},{en:"is not merely a record of the past",ja:"単なる過去の記録ではなく"},{en:"but a mirror",ja:"鏡だ"},{en:"in which the present sees itself more clearly.",ja:"現在がより明確に自己を見る"}],
+          soundNote:"at its best→「アリッツベスト」のようにtとitsが連結。merely a record→「ミアリアレコード」のようにlyとaが連結。" },
+      ]
+    },
+  ],
+
+};
+
+const STEPS = [
+  { id:1, icon:"✍️", title:"ディクテーション", sub:"聞こえた音を書き取る", color:"#E8553E",
+    hint:["テストじゃない。正しく書けなくてOK。","カタカナでも適当なアルファベットでもOK。","意味を考えない。音だけを書く。","「全然わからない」は嘘。20〜50%は聞こえてるはず。"] },
+  { id:2, icon:"🔊", title:"音の確認", sub:"0.5倍速で聴いてリピート", color:"#E8963E",
+    hint:["0.5xでスロー再生して音変化を確認。","リンキング・音の脱落・弱形をチェック。","聞いた直後に声に出して真似する。","苦手な音（R音など）を自覚する。"] },
+  { id:3, icon:"💡", title:"意味の確認", sub:"語順通りにイメージをつかむ", color:"#4A90D9",
+    hint:["帰り読み（後ろから訳す）は絶対NG！","英語の語順のまま→絵・映像でつかむ。","日本語訳に依存しない。","知らない単語・文法はここで調べる。"] },
+  { id:4, icon:"⚡", title:"スラッシュリーディング", sub:"塊ごとに語順通りに読む", color:"#4CAF82",
+    hint:["ルール①：スラッシュより前に絶対戻らない。","ルール②：スラッシュを超えて訳さない。","各塊の🔊ボタンで音を確認しながら進む。","ゆっくりでいい。語順通りに意味をつかむ。"] },
+  { id:5, icon:"🚀", title:"スピードアップ", sub:"0.75x → 1.0x → 1.25x", color:"#9B59B6",
+    hint:["ゆっくりから徐々に速くする。","目標：スクリプトなしで1.0xが聴ける。","「早い」は慣れ不足。繰り返しが全て。","右脳で音を処理できれば完成！"] },
+];
+
+// ═══════════════════════════════════════════════════════════
+// 状態
+// ═══════════════════════════════════════════════════════════
+let currentLevelId   = null;
+let currentLessonIdx = 0;
+let currentSentIdx   = 0;
+let currentStepIdx   = 0;
+let completedSteps   = [];
+let dictText         = "";
+let showScript       = false;
+let slashStarted     = false;
+let slashIdx         = 0;
+let currentRate      = 1.0;
+let completedSents   = []; // 完了した文のインデックス
+let selectedVoice    = null; // 選択中の音声
+let availableVoices  = []; // 利用可能な音声リスト
+
+// 音声定義
+const VOICE_PROFILES = [
+  { key:'us',  label:'🇺🇸 US',  flag:'🇺🇸', langs:['en-US'], keywords:['Google US','Samantha','Alex','Microsoft Zira','en-US'] },
+  { key:'uk',  label:'🇬🇧 UK',  flag:'🇬🇧', langs:['en-GB'], keywords:['Google UK','Daniel','Kate','Microsoft Hazel','en-GB'] },
+  { key:'au',  label:'🇦🇺 AU',  flag:'🇦🇺', langs:['en-AU'], keywords:['Google Australian','Karen','Microsoft Catherine','en-AU'] },
+  { key:'in',  label:'🇮🇳 IN',  flag:'🇮🇳', langs:['en-IN'], keywords:['Google हिन्दी','Lekha','Microsoft Heera','en-IN'] },
+  { key:'za',  label:'🇿🇦 ZA',  flag:'🇿🇦', langs:['en-ZA'], keywords:['en-ZA'] },
+];
+
+// ═══════════════════════════════════════════════════════════
+// TTS
+// ═══════════════════════════════════════════════════════════
+function speakText(text, onEnd) {
+  if (!window.speechSynthesis) return;
+  speechSynthesis.cancel();
+  const doSpeak = () => {
+    const u = new SpeechSynthesisUtterance(text);
+    u.rate   = currentRate;
+    u.pitch  = 1.0;
+    u.volume = 1.0;
+    if (selectedVoice) {
+      u.voice = selectedVoice;
+      u.lang  = selectedVoice.lang;
+    } else {
+      u.lang = 'en-US';
+      const voices = speechSynthesis.getVoices();
+      const v = voices.find(v => v.lang === 'en-US' && v.name.includes('Google'))
+             || voices.find(v => v.lang === 'en-US')
+             || voices.find(v => v.lang.startsWith('en'));
+      if (v) u.voice = v;
+    }
+    if (onEnd) u.onend = onEnd;
+    u.onerror = () => {};
+    speechSynthesis.speak(u);
+  };
+  const voices = speechSynthesis.getVoices();
+  if (voices.length > 0) { doSpeak(); }
+  else {
+    speechSynthesis.onvoiceschanged = () => { speechSynthesis.onvoiceschanged = null; doSpeak(); };
+    setTimeout(() => { if (speechSynthesis.getVoices().length === 0) doSpeak(); }, 500);
+  }
+}
+
+// 音声ボタンを描画
+function renderVoiceButtons() {
+  const row = document.getElementById('voice-row');
+  const status = document.getElementById('voice-status');
+  if (!row) return;
+
+  const voices = speechSynthesis.getVoices();
+  availableVoices = voices.filter(v => v.lang.startsWith('en'));
+
+  // プロファイルごとにマッチする音声を探す
+  const found = [];
+  VOICE_PROFILES.forEach(profile => {
+    let match = null;
+    // langで検索
+    for (const lang of profile.langs) {
+      match = voices.find(v => v.lang === lang && v.name.includes('Google'))
+           || voices.find(v => v.lang === lang);
+      if (match) break;
+    }
+    if (match) found.push({ profile, voice: match });
+  });
+
+  // ボタン生成
+  // ラベルスパンを残して他を削除
+  row.innerHTML = '<span style="font-size:11px;color:#555;white-space:nowrap">🎙 音声：</span>';
+
+  if (found.length === 0) {
+    row.innerHTML += '<span style="font-size:11px;color:#555">（音声リスト読み込み中...）</span>';
+    status.textContent = '';
+    return;
+  }
+
+  found.forEach(({ profile, voice }, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'voice-btn' + (i === 0 && !selectedVoice ? ' active' : '');
+    btn.textContent = profile.label;
+    btn.dataset.key = profile.key;
+    if (i === 0 && !selectedVoice) {
+      selectedVoice = voice;
+      btn.style.background = document.getElementById('level-tag') ?
+        (document.getElementById('level-tag').style.color || '#4CAF82') : '#4CAF82';
+    }
+    btn.onclick = () => {
+      selectedVoice = voice;
+      document.querySelectorAll('.voice-btn').forEach(b => {
+        b.classList.remove('active');
+        b.style.background = '#1e1e1e';
+      });
+      btn.classList.add('active');
+      const lv = LEVELS.find(l => l.id === currentLevelId);
+      btn.style.background = lv ? lv.color : '#4CAF82';
+      status.textContent = `✅ ${profile.flag} ${voice.name}`;
+      setTimeout(() => { status.textContent = ''; }, 2000);
+    };
+    row.appendChild(btn);
+  });
+
+  // 初期色設定
+  const lv = LEVELS.find(l => l.id === currentLevelId);
+  const activeBtn = row.querySelector('.voice-btn.active');
+  if (activeBtn && lv) activeBtn.style.background = lv.color;
+
+  status.textContent = found.length + '種類の音声が利用可能';
+  setTimeout(() => { status.textContent = ''; }, 2000);
+}
+
+function playPhrase() {
+  const lesson  = LESSONS[currentLevelId][currentLessonIdx];
+  const sent    = lesson.sentences[currentSentIdx];
+  const btn     = document.getElementById('play-btn');
+  const status  = document.getElementById('tts-status');
+  btn.textContent = '⏸ 再生中...';
+  status.style.color = '#4CAF82';
+  speakText(sent.en, () => {
+    btn.textContent = '▶ この文を再生';
+    status.textContent = '✅ 完了';
+    setTimeout(() => { status.textContent = ''; }, 1500);
+  });
+}
+
+function stopPhrase() {
+  if (window.speechSynthesis) speechSynthesis.cancel();
+  const btn = document.getElementById('play-btn');
+  if (btn) btn.textContent = '▶ この文を再生';
+  const status = document.getElementById('tts-status');
+  if (status) status.textContent = '';
+}
+
+function speakChunk(text) {
+  speakText(text, null);
+}
+
+// 全文通し再生
+function playFullText() {
+  const lesson = LESSONS[currentLevelId][currentLessonIdx];
+  const allText = lesson.sentences.map(s => s.en).join(' ');
+  const btn = document.getElementById('play-full-btn');
+  if (btn) btn.textContent = '⏸ 再生中...';
+  speakText(allText, () => { if (btn) btn.textContent = '▶ 全文通しで再生'; });
+}
+
+function setRate(r) {
+  currentRate = r;
+  const lv = LEVELS.find(l => l.id === currentLevelId);
+  document.querySelectorAll('.rate-btn').forEach(b => {
+    const isActive = parseFloat(b.dataset.rate) === r;
+    b.classList.toggle('active', isActive);
+    b.style.background = isActive ? (lv ? lv.color : '#E8553E') : '#1e1e1e';
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// 画面遷移
+// ═══════════════════════════════════════════════════════════
+function showHome() {
+  stopPhrase();
+  document.getElementById('home-view').style.display = 'block';
+  document.getElementById('lesson-select-view').style.display = 'none';
+  document.getElementById('work-view').style.display = 'none';
+  currentLevelId = null;
+}
+
+function showLevelLessons(levelId) {
+  currentLevelId = levelId;
+  const lv = LEVELS.find(l => l.id === levelId);
+  document.getElementById('home-view').style.display = 'none';
+  document.getElementById('lesson-select-view').style.display = 'block';
+  document.getElementById('work-view').style.display = 'none';
+  document.getElementById('lesson-select-title').textContent = `${lv.name} · ${lv.uni} — レッスンを選ぶ`;
+
+  const grid = document.getElementById('lesson-select-grid');
+  grid.innerHTML = '';
+  const lessons = LESSONS[levelId] || [];
+  lessons.forEach((lesson, idx) => {
+    const card = document.createElement('button');
+    card.className = 'lesson-card';
+    card.innerHTML = `
+      <div class="lesson-num" style="color:${lv.color}">LESSON ${idx + 1}</div>
+      <div class="lesson-topic">${lesson.topic}</div>
+      <div class="lesson-preview">${lesson.sentences[0].en.substring(0, 50)}...</div>
+      <div style="font-size:11px;color:#555;margin-top:8px">${lesson.sentences.length}文</div>`;
+    card.onclick = () => startLesson(levelId, idx);
+    grid.appendChild(card);
+  });
+
+  if (lessons.length === 0) {
+    grid.innerHTML = '<div style="color:#555;font-size:14px;padding:20px">このレベルのレッスンは準備中です。</div>';
+  }
+}
+
+function showLessonSelect() {
+  stopPhrase();
+  showLevelLessons(currentLevelId);
+}
+
+function startLesson(levelId, lessonIdx) {
+  currentLevelId   = levelId;
+  currentLessonIdx = lessonIdx;
+  currentSentIdx   = 0;
+  completedSents   = [];
+  resetWork();
+  document.getElementById('lesson-select-view').style.display = 'none';
+  document.getElementById('work-view').style.display = 'block';
+  renderWork();
+}
+
+function resetWork() {
+  currentStepIdx = 0;
+  completedSteps = [];
+  dictText       = "";
+  showScript     = false;
+  slashStarted   = false;
+  slashIdx       = 0;
+}
+
+// ═══════════════════════════════════════════════════════════
+// ワーク描画
+// ═══════════════════════════════════════════════════════════
+function renderWork() {
+  const lv     = LEVELS.find(l => l.id === currentLevelId);
+  const lesson = LESSONS[currentLevelId][currentLessonIdx];
+  const sent   = lesson.sentences[currentSentIdx];
+  const step   = STEPS[currentStepIdx];
+  const total  = lesson.sentences.length;
+
+  // レベルタグ・レッスン情報
+  document.getElementById('level-tag').textContent = `${lv.name}`;
+  document.getElementById('level-tag').style.background = lv.color + '22';
+  document.getElementById('level-tag').style.color = lv.color;
+  document.getElementById('lesson-info').textContent = `${lesson.topic}`;
+  document.getElementById('sentence-counter').textContent = `文${currentSentIdx + 1} / ${total}`;
+
+  // 英文（STEP1・2はぼかし）
+  const phraseEl = document.getElementById('phrase-text');
+  phraseEl.textContent = sent.en;
+  phraseEl.style.filter = currentStepIdx <= 1 ? 'blur(7px)' : 'none';
+  phraseEl.style.userSelect = currentStepIdx <= 1 ? 'none' : '';
+
+  // 再生ボタン
+  document.getElementById('play-btn').style.background = lv.color;
+  document.getElementById('play-btn').textContent = '▶ この文を再生';
+  document.getElementById('tts-status').textContent = '';
+
+  // ナビ
+  document.getElementById('sent-count').textContent = `文${currentSentIdx + 1} / ${total}`;
+  document.getElementById('prev-btn').disabled = currentSentIdx === 0;
+  document.getElementById('next-btn').disabled = currentSentIdx === total - 1;
+
+  // 進捗（文単位）
+  const pct = Math.round((completedSents.length / total) * 100);
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('prog-fill').style.background = lv.color;
+  document.getElementById('prog-txt').textContent = pct + '%';
+
+  // 全文サイドバー
+  renderFullText(lesson, lv);
+
+  // ステップタブ
+  const tabs = document.getElementById('step-tabs');
+  tabs.innerHTML = '';
+  STEPS.forEach((st, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'step-tab';
+    btn.textContent = (completedSteps.includes(i) ? '✓' : st.icon) + ' ' + st.id;
+    const isActive = i === currentStepIdx;
+    const isDone   = completedSteps.includes(i);
+    btn.style.background   = isActive ? st.color + '22' : '#111';
+    btn.style.color        = isActive ? st.color : isDone ? '#555' : '#444';
+    btn.style.borderBottom = isActive ? `2px solid ${st.color}` : '2px solid transparent';
+    btn.style.opacity      = (!isDone && i > currentStepIdx) ? '0.35' : '1';
+    btn.onclick = () => { currentStepIdx = i; renderWork(); };
+    tabs.appendChild(btn);
+  });
+
+  // ステップカード
+  const allDone = completedSteps.length === STEPS.length;
+  document.getElementById('step-card').style.display = allDone ? 'none' : 'block';
+  document.getElementById('all-done').style.display  = allDone ? 'block' : 'none';
+
+  if (!allDone) {
+    document.getElementById('step-card').style.borderTopColor = step.color;
+    document.getElementById('step-badge').textContent = `STEP ${step.id}`;
+    document.getElementById('step-badge').style.background = step.color;
+    document.getElementById('step-title').textContent = step.title;
+    document.getElementById('step-sub').textContent   = step.sub;
+
+    const hints = document.getElementById('hints');
+    hints.innerHTML = '';
+    step.hint.forEach(h => {
+      const row = document.createElement('div');
+      row.className = 'hint-row';
+      row.innerHTML = `<span class="hint-dot" style="background:${step.color}"></span><span class="hint-txt">${h}</span>`;
+      hints.appendChild(row);
+    });
+
+    renderStepContent(sent, step, lv);
+
+    const doneBtn = document.getElementById('done-btn');
+    doneBtn.style.background = completedSteps.includes(currentStepIdx) ? '#1e1e1e' : step.color;
+    doneBtn.textContent = completedSteps.includes(currentStepIdx)
+      ? `✓ STEP ${step.id} 完了済み`
+      : `STEP ${step.id} 完了 →`;
+  } else {
+    // 文完了
+    document.getElementById('all-done-title').textContent = `文${currentSentIdx + 1} 完了！`;
+    document.getElementById('all-done-title').style.color = lv.color;
+    document.getElementById('next-sent-btn').style.background = lv.color;
+    document.getElementById('next-sent-btn').style.display =
+      currentSentIdx < total - 1 ? 'inline-block' : 'none';
+
+    if (!completedSents.includes(currentSentIdx)) completedSents.push(currentSentIdx);
+
+    // 全レッスン完了チェック
+    if (completedSents.length === total) {
+      renderFullReview(lesson, lv);
+    }
+  }
+
+  setRate(currentRate);
+  // 音声ボタン更新
+  setTimeout(renderVoiceButtons, 100);
+}
+
+function renderFullText(lesson, lv) {
+  const area = document.getElementById('full-text-area');
+  const container = document.getElementById('full-text-sentences');
+  area.style.display = 'block';
+  area.style.background = '#111';
+  area.style.border = '1px solid #1e1e1e';
+  area.style.borderRadius = '14px';
+  area.style.padding = '16px';
+  container.innerHTML = '';
+  lesson.sentences.forEach((s, i) => {
+    const div = document.createElement('div');
+    div.className = 'full-text-sent';
+    if (i === currentSentIdx) div.classList.add('current');
+    else if (completedSents.includes(i)) div.classList.add('done');
+    div.textContent = `${i + 1}. ${s.en}`;
+    div.onclick = () => {
+      currentSentIdx = i;
+      resetWork();
+      renderWork();
+    };
+    container.appendChild(div);
+  });
+}
+
+function renderStepContent(sent, step, lv) {
+  const c = document.getElementById('step-content');
+  c.innerHTML = '';
+
+  if (currentStepIdx === 0) {
+    c.innerHTML = `
+      <div class="field-label">📝 書き取りメモ（カタカナ・英語・なんでもOK）</div>
+      <textarea id="dict-ta" placeholder="聞こえた音をそのまま書く。意味は考えない。正確さは関係ない。">${dictText}</textarea>
+      <div class="info-box" style="border-color:${step.color}44;color:${step.color}">
+        ⚡ 1.0x で2回聴く → 書く → 0.5x で確認 → 書き足す
+      </div>`;
+    document.getElementById('dict-ta').addEventListener('input', e => { dictText = e.target.value; });
+  }
+
+  if (currentStepIdx === 1) {
+    c.innerHTML = `
+      <div class="sound-box">
+        <div class="field-label">🔍 音変化ポイント</div>
+        <div class="sound-note">${sent.soundNote}</div>
+      </div>
+      <div style="margin-bottom:12px">
+        <div class="field-label">推奨手順：</div>
+        <div class="rate-guide-row"><span class="rate-tag" style="background:#444">0.5x</span>音変化を耳で確認</div>
+        <div class="rate-guide-row"><span class="rate-tag" style="background:#4A90D9">0.75x</span>真似してリピート</div>
+        <div class="rate-guide-row"><span class="rate-tag" style="background:${step.color}">1.0x</span>通常スピードで確認</div>
+      </div>
+      ${dictText ? `<div style="background:#0d0d0d;border:1px solid #1e1e1e;border-radius:10px;padding:12px;margin-top:12px">
+        <div class="field-label">📝 あなたのSTEP1メモ</div>
+        <div style="font-size:13px;color:#aaa;line-height:1.7;white-space:pre-wrap">${dictText}</div>
+      </div>` : ''}`;
+  }
+
+  if (currentStepIdx === 2) {
+    c.innerHTML = `
+      <button class="toggle-btn" id="script-toggle-btn"
+        style="background:${showScript ? step.color : '#222'}"
+        onclick="toggleScript('${step.color}')">
+        ${showScript ? '📖 英文を閉じる' : '📖 英文を表示する'}
+      </button>
+      <div class="script-box" id="script-box" style="display:${showScript ? 'block' : 'none'}">
+        <div class="script-txt">${sent.en}</div>
+      </div>
+      <div class="rules-box">
+        <div style="color:#E8553E;font-weight:700;margin-bottom:8px">❌ やってはいけないこと</div>
+        <div class="rule-row">帰り読み（後ろから前に訳す）→ リスニング力は絶対につかない</div>
+        <div class="rule-row">日本語訳に依存する → 英語を英語のまま処理する練習をする</div>
+        <div style="color:#4CAF82;font-weight:700;margin:12px 0 8px">✅ やること</div>
+        <div class="rule-row">英語の語順のまま → 絵・映像のイメージでつかむ</div>
+        <div class="rule-row">知らない単語はここで調べてOK</div>
+      </div>`;
+  }
+
+  if (currentStepIdx === 3) {
+    let html = `<div class="slash-rules">
+      <span style="color:#E8553E;font-weight:800">ルール①</span> スラッシュより前に絶対戻らない　
+      <span style="color:#E8553E;font-weight:800">ルール②</span> スラッシュを超えて訳さない
+    </div>`;
+    if (!slashStarted) {
+      html += `<button class="toggle-btn" style="background:${step.color}" onclick="startSlash()">⚡ スラッシュリーディング開始</button>`;
+    } else {
+      sent.slashChunks.slice(0, slashIdx + 1).forEach((chunk, i) => {
+        const isActive = i === slashIdx;
+        const escapedEn = chunk.en.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        html += `<div class="slash-chunk ${isActive ? 'active' : 'done'}"
+          style="border-left-color:${isActive ? step.color : '#2a2a2a'}">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <div class="slash-en" style="flex:1">${chunk.en}</div>
+            <button class="slash-play-btn"
+              style="background:${isActive ? step.color : '#2a2a2a'}"
+              onclick="speakChunk('${escapedEn}')">🔊 聴く</button>
+          </div>
+          ${isActive && chunk.ja ? `<div class="slash-ja">${chunk.ja}</div>` : ''}
+        </div>`;
+      });
+      if (slashIdx < sent.slashChunks.length - 1) {
+        html += `<button class="toggle-btn" style="background:${step.color};margin-top:10px" onclick="nextSlash()">次の塊へ →</button>`;
+      } else {
+        html += `<div class="info-box" style="border-color:#4CAF8244;color:#4CAF82">✅ 全塊を語順通りに処理しました！</div>`;
+      }
+    }
+    // 日本語訳全文を追加
+    html += `<div style="background:#0a1a0a;border:1px solid #1e3a1e;border-radius:12px;padding:16px;margin-top:16px">
+      <div style="font-size:10px;font-weight:700;color:#4CAF82;letter-spacing:0.1em;margin-bottom:12px">📝 日本語訳（全文）</div>`;
+    sent.slashChunks.forEach((chunk, i) => {
+      if (chunk.ja) {
+        html += `<div style="font-size:13px;color:#8db;line-height:1.9;padding:3px 0;border-bottom:1px solid #1a2e1a">
+          <span style="color:#4a7a4a;font-size:11px;margin-right:6px">${i+1}</span>${chunk.ja}
+        </div>`;
+      }
+    });
+    html += `</div>`;
+    c.innerHTML = html;
+  }
+
+  if (currentStepIdx === 4) {
+    c.innerHTML = `
+      <div class="speed-guide">
+        <div class="speed-row"><span class="rate-tag" style="background:#444">0.5x</span><span class="speed-row-txt">音変化を最終確認</span></div>
+        <div class="speed-row"><span class="rate-tag" style="background:#4A90D9">0.75x</span><span class="speed-row-txt">語順通りイメージを維持</span></div>
+        <div class="speed-row"><span class="rate-tag" style="background:#4CAF82">1.0x</span><span class="speed-row-txt">ナチュラルスピードで理解</span></div>
+        <div class="speed-row"><span class="rate-tag" style="background:#9B59B6">1.25x</span><span class="speed-row-txt">早慶・ネイティブレベルへ</span></div>
+      </div>
+      <div class="info-box" style="border-color:#9B59B644;color:#9B59B6">
+        🎯 スクリプトなし・1.0xで意味が映像でつかめたら完成！
+      </div>`;
+  }
+}
+
+function renderFullReview(lesson, lv) {
+  const area = document.getElementById('full-review');
+  area.style.display = 'block';
+  document.getElementById('full-review-title').textContent = '🎉 全文完了！通しで聴こう';
+  document.getElementById('full-review-title').style.color = lv.color;
+  document.getElementById('play-full-btn').style.background = lv.color;
+
+  const list = document.getElementById('full-review-list');
+  list.innerHTML = '';
+  lesson.sentences.forEach((s, i) => {
+    const div = document.createElement('div');
+    div.className = 'full-review-sent';
+    div.innerHTML = `<span style="color:#555;font-size:11px;margin-right:8px">${i+1}</span>${s.en}`;
+    div.onclick = () => speakChunk(s.en);
+    list.appendChild(div);
+  });
+}
+
+function toggleScript(color) {
+  showScript = !showScript;
+  const box = document.getElementById('script-box');
+  const btn = document.getElementById('script-toggle-btn');
+  if (box) box.style.display = showScript ? 'block' : 'none';
+  if (btn) {
+    btn.style.background = showScript ? color : '#222';
+    btn.textContent = showScript ? '📖 英文を閉じる' : '📖 英文を表示する';
+  }
+}
+
+function startSlash() {
+  slashStarted = true; slashIdx = 0;
+  const lesson = LESSONS[currentLevelId][currentLessonIdx];
+  renderStepContent(lesson.sentences[currentSentIdx], STEPS[currentStepIdx], LEVELS.find(l=>l.id===currentLevelId));
+}
+
+function nextSlash() {
+  slashIdx++;
+  const lesson = LESSONS[currentLevelId][currentLessonIdx];
+  renderStepContent(lesson.sentences[currentSentIdx], STEPS[currentStepIdx], LEVELS.find(l=>l.id===currentLevelId));
+}
+
+function completeStep() {
+  if (!completedSteps.includes(currentStepIdx)) completedSteps.push(currentStepIdx);
+  if (currentStepIdx < STEPS.length - 1) currentStepIdx++;
+  renderWork();
+}
+
+function goNext() {
+  const lesson = LESSONS[currentLevelId][currentLessonIdx];
+  if (currentSentIdx < lesson.sentences.length - 1) {
+    currentSentIdx++;
+    resetWork();
+    renderWork();
+  }
+}
+
+function goPrev() {
+  if (currentSentIdx > 0) {
+    currentSentIdx--;
+    resetWork();
+    renderWork();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// ホーム
+// ═══════════════════════════════════════════════════════════
+function renderHome() {
+  const grid = document.getElementById('level-grid');
+  grid.innerHTML = '';
+  LEVELS.forEach(lv => {
+    const lessonCount = (LESSONS[lv.id] || []).length;
+    const btn = document.createElement('button');
+    btn.className = 'level-card';
+    btn.style.borderColor = lv.color + '44';
+    btn.innerHTML = `
+      <div class="lv-tag" style="background:${lv.color}22;color:${lv.color}">${lv.name}</div>
+      <div class="lv-uni">${lv.uni}</div>
+      <div class="lv-label">${lv.tag}</div>
+      <div class="lv-desc">${lv.desc}</div>
+      <div class="lv-target" style="color:${lv.color}">${lv.target}</div>
+      <div class="lv-cta" style="color:${lv.color}">${lessonCount}レッスン（各10文）→</div>`;
+    btn.onclick = () => showLevelLessons(lv.id);
+    grid.appendChild(btn);
+  });
+}
+
+renderHome();
+if (window.speechSynthesis) {
+  speechSynthesis.onvoiceschanged = () => {
+    speechSynthesis.getVoices();
+    renderVoiceButtons();
+  };
+  speechSynthesis.getVoices();
+}
+</script>
+</body>
+</html>
